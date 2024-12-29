@@ -17,6 +17,7 @@ from modules.utils import config  # Import the global config after setting it
 
 sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
+target_arrive_threshold = config.get('agents', {}).get('target_arrive_threshold', 10)
 max_simulation_time = config.get('simulation').get('max_simulation_time', 0)
 screen_height = config['simulation']['screen_height']
 screen_width = config['simulation']['screen_width']
@@ -46,6 +47,10 @@ else:
 # screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 # background_color = (173, 255, 47)
 background_color = (224, 224, 224)
+background_image = pygame.image.load("C://Users//kimjaeho//space-simulator//image//background//city_view.png").convert()
+background_image = pygame.transform.scale(background_image, (1400, 1400))
+final_point_image = pygame.image.load("C://Users//kimjaeho//space-simulator//image//point//final_point.png").convert()
+final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
 
 # Set logo and title
 logo_image_path = 'assets/logo.jpg'  # Change to the path of your logo image
@@ -100,6 +105,9 @@ async def game_loop():
         print("Recording started...") 
 
     while running:
+        # Draw the background image first
+        screen.blit(background_image, (0, 0))  # Draw the background image at (0, 0)
+        screen.blit(final_point_image, (700, 500))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -132,7 +140,13 @@ async def game_loop():
             simulation_time += sampling_time
             tasks_left = sum(1 for task in tasks if not task.completed)
             if tasks_left == 0:
-                mission_completed = not generation_enabled or generation_count == max_generations
+                all_agents_gathered = all(
+                    agent.position.distance_to(pygame.Vector2(700, 500)) < target_arrive_threshold
+                    for agent in agents
+            )
+                if all_agents_gathered:
+                    mission_completed = not generation_enabled or generation_count == max_generations
+
 
             # Dynamic task generation
             if generation_enabled and generation_count < max_generations:                
@@ -162,7 +176,23 @@ async def game_loop():
 
             # Rendering
             if rendering_mode == "Screen":
-                screen.fill(background_color)
+                screen.blit(background_image, (0, 0))
+                screen.blit(final_point_image, (670, 460))
+
+                # Draw tasks with task_id displayed
+                for idx, task in enumerate(tasks):
+                    if idx % 2 == 0:
+                        task.draw(screen)
+                    else:
+                        task.draw(screen)
+                
+                for idx in range(0, len(tasks), 2):
+                    start_task = tasks[idx]
+                    end_task = tasks[idx + 1]
+                    if not end_task.completed:
+                        pygame.draw.line(screen, start_task.color, start_task.position, end_task.position, width=2)
+                    start_task.draw(screen)
+                    end_task.draw(screen)
 
 
 
