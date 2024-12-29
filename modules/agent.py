@@ -5,6 +5,8 @@ from modules.behavior_tree import *
 from modules.utils import config, generate_positions, parse_behavior_tree
 from modules.task import task_colors
 
+car_image = pygame.image.load("C://Users//kimjaeho//univ//spade-simulator//image//car//white.png").convert_alpha()
+
 # Load agent configuration
 agent_max_speed = config['agents']['max_speed']
 agent_max_accel = config['agents']['max_accel']
@@ -34,6 +36,8 @@ class Agent:
         self.rotation = 0  # Initial rotation
         self.color = (0, 0, 255)  # Blue color
         self.blackboard = {}
+        self.decision_maker = None
+        self.visible = True
 
         self.tasks_info = tasks_info # global info
         self.agents_info = None # global info
@@ -48,10 +52,33 @@ class Agent:
         
 
         self.distance_moved = 0.0
-        self.task_amount_done = 0.0        
+        self.task_amount_done = 0.0
+        self.end_task_id = None
+
+        # Load rotating blade images
+        self.drone_images = [
+            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_1.png").convert_alpha(),
+            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_2.png").convert_alpha(),
+            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_3.png").convert_alpha(),
+            # Add more images for smoother rotation if available
+        ]
+        self.blade_image_index = 0
+        self.frame_count = 0
+        self.rotation_speed = 5  # Adjust for how fast you want the blades to rotate
 
     def create_behavior_tree(self):
         self.tree = self._create_behavior_tree()
+
+    def is_near_task(self, task):
+        distance = self.position.distance_to(task.position)
+        return distance < task.radius + target_arrive_threshold
+    
+    def set_global_info_agents(self, agents_info):
+        self.agents_info = agents_info
+    
+    def set_end_task_id(self, task_id):
+        self.end_task_id = task_id
+        self.assigned_task_id = task_id
 
     # Agent's Behavior Tree
     def _create_behavior_tree(self):
@@ -161,14 +188,48 @@ class Agent:
         self.messages_received.append(message)            
 
     def draw(self, screen):
-        size = 10
-        angle = self.rotation
+        if not self.visible:
+            return
+            
+         # Cycling through blade images for animation
+        self.frame_count += 1
+        if self.frame_count % self.rotation_speed == 0:
+            self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
 
-        # Calculate the triangle points based on the current position and angle
-        p1 = pygame.Vector2(self.position.x + size * math.cos(angle), self.position.y + size * math.sin(angle))
-        p2 = pygame.Vector2(self.position.x + size * math.cos(angle + 2.5), self.position.y + size * math.sin(angle + 2.5))
-        p3 = pygame.Vector2(self.position.x + size * math.cos(angle - 2.5), self.position.y + size * math.sin(angle - 2.5))
+        resized_image = pygame.transform.scale(car_image, (0, 0))
+        rotated_image = pygame.transform.rotate(resized_image, -math.degrees(self.rotation))
+        
+        image_rect = rotated_image.get_rect(center=(self.position.x, self.position.y))
+        screen.blit(rotated_image, image_rect.topleft)
 
+        drone_image = self.drone_images[self.blade_image_index]
+
+        resized_blade_image = pygame.transform.scale(drone_image, (50, 45))  # Adjust size here
+        rotated_blade_image = pygame.transform.rotate(resized_blade_image, -math.degrees(self.rotation))
+
+        blade_image_rect = rotated_blade_image.get_rect(center=(self.position.x, self.position.y))
+        screen.blit(rotated_blade_image, blade_image_rect.topleft)
+
+        # Optionally, draw other elements like the rotating blades on top
+        self.update_color()
+
+    def draw_rotating_blades(self, screen):
+        """Draws rotating blades with animation"""
+        # Update the blade image every few frames to simulate rotation
+        self.frame_count += 1
+        if self.frame_count % self.rotation_speed == 0:
+            self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
+
+        # Get the current blade image
+        blade_image = self.drone_images[self.blade_image_index]
+
+        # Rotate the blade image according to the agent's current rotation
+        rotated_blade_image = pygame.transform.rotate(blade_image, -math.degrees(self.rotation))
+        blade_rect = rotated_blade_image.get_rect(center=(self.position.x, self.position.y))
+
+        # Draw the rotating blade at the agent's position
+        screen.blit(rotated_blade_image, blade_rect.topleft)
+        
         self.update_color()
         pygame.draw.polygon(screen, self.color, [p1, p2, p3])
 
