@@ -14,7 +14,7 @@ agent_track_size = config['simulation']['agent_track_size']
 work_rate = config['agents']['work_rate']
 agent_communication_radius = config['agents']['communication_radius']
 agent_situation_awareness_radius = config.get('agents', {}).get('situation_awareness_radius', 0)
-font = pygame.font.Font(None, 15)
+
 
 # Load behavior tree
 behavior_tree_xml = config['agents']['behavior_tree_xml']
@@ -33,6 +33,7 @@ class Agent:
         self.memory_location = []  # To draw track
         self.rotation = 0  # Initial rotation
         self.color = (0, 0, 255)  # Blue color
+        self.font = pygame.font.Font(None, 15)
         self.blackboard = {}
 
         self.tasks_info = tasks_info # global info
@@ -188,7 +189,7 @@ class Agent:
 
     def draw_agent_id(self, screen):
         # Draw assigned_task_id next to agent position
-        text_surface = font.render(f"agent_id: {self.agent_id}", True, (50, 50, 50))
+        text_surface = self.font.render(f"agent_id: {self.agent_id}", True, (50, 50, 50))
         screen.blit(text_surface, (self.position[0] + 10, self.position[1] - 10))
 
     def draw_assigned_task_id(self, screen):
@@ -197,14 +198,14 @@ class Agent:
             assigned_task_id_list = [task.task_id for task in self.planned_tasks]
         else:
             assigned_task_id_list = self.assigned_task_id
-        text_surface = font.render(f"task_id: {assigned_task_id_list}", True, (50, 50, 50))
+        text_surface = self.font.render(f"task_id: {assigned_task_id_list}", True, (50, 50, 50))
         screen.blit(text_surface, (self.position[0] + 10, self.position[1]))
 
     def draw_work_done(self, screen):
         # Draw assigned_task_id next to agent position
-        text_surface = font.render(f"dist: {self.distance_moved:.1f}", True, (50, 50, 50))
+        text_surface = self.font.render(f"dist: {self.distance_moved:.1f}", True, (50, 50, 50))
         screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 10))
-        text_surface = font.render(f"work: {self.task_amount_done:.1f}", True, (50, 50, 50))
+        text_surface = self.font.render(f"work: {self.task_amount_done:.1f}", True, (50, 50, 50))
         screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 20))
 
 

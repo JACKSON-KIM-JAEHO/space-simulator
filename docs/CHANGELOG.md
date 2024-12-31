@@ -12,6 +12,9 @@
   - **Result Saving**: Consider whether functions like `record_gif`, `save_timewise`, and `save_agentwise` should reside in `main.py` or `env.py`. Current implementation retains them in `env.py`.
   - **Configuration Saving**: The `save_config_yaml()` function depends on `config.args`, which is not passed to `env.py`. This has been commented out and will require handling in `main.py`.
 
+### Changes
+- **Minor Revision**
+  - `agent.py`: remove an unnecessary global variable (i.e., `font`) outside `Agent` class. 
 
 ## Version 1.2.12 (24-08-20)
 ### Changes
