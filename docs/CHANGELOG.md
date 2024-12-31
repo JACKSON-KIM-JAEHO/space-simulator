@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## Version 1.2.13 (24-12-31)
+### Changes
+- **Scenario Management (`main.py`, `env.py`)**
+  - Refactored the simulation structure by separating `main.py` and scenario-specific logic into `env.py`. 
+    - This allows for better management of multiple scenarios by keeping scenario-specific implementations modular.
+    - The existing functionality of `main.py` has been retained in `env.py` with minimal modifications to maintain compatibility.
+### Known bugs and limitations
+  - **Status Variables**: `env.py` should encapsulate its status variables in a dictionary format and provide a unified `observe()` method for external access.
+  - **Decision-Making Status Display**: The `decision_making_module.draw_decision_making_status()` method in `env.py` for rendering is currently confusing and has been commented out for simplification.
+  - **Result Saving**: Consider whether functions like `record_gif`, `save_timewise`, and `save_agentwise` should reside in `main.py` or `env.py`. Current implementation retains them in `env.py`.
+  - **Configuration Saving**: The `save_config_yaml()` function depends on `config.args`, which is not passed to `env.py`. This has been commented out and will require handling in `main.py`.
+
+
 ## Version 1.2.12 (24-08-20)
 ### Changes
 - **Simulation**
