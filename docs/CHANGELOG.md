@@ -1,7 +1,7 @@
 # CHANGELOG.md
 
 ## Version 1.2.13 (24-12-31)
-### Changes
+### New Features
 - **Scenario Management (`main.py`, `env.py`)**
   - Refactored the simulation structure by separating `main.py` and scenario-specific logic into `env.py`. 
     - This allows for better management of multiple scenarios by keeping scenario-specific implementations modular.
