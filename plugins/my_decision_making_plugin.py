@@ -15,7 +15,8 @@ class MyDecisionMakingClass:
         Output: 
             - `task_id`, if task allocation works well
             - `None`, otherwise
-        '''        
+        '''  
+        assigned_task_id = blackboard.get('assigned_task_id', None)
         if assigned_task_id is None:
             available_tasks = blackboard.get('local_tasks_info', [])
             start_tasks = [
