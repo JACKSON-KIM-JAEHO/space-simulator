@@ -24,29 +24,6 @@ class Agent(BaseAgent):
         self.task_amount_done = 0.0        
 
 
-        self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent.png')  # 기본 이미지
-        self.image = pygame.transform.scale(self.image, (50, 50))  # 크기 조정
-        self.task_color = None  # 현재 운반 중인 task 색상 (없으면 None)
-
-    def update_image(self):
-        """현재 상태에 따라 이미지를 업데이트"""
-        if self.task_color == 'red':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_red_container.png')
-        elif self.task_color == 'blue':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_blue_container.png')
-        elif self.task_color == 'yellow':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_yellow_container.png')
-        else:
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent.png')  # 기본 이미지
-
-        # 이미지 크기 조정
-        self.image = pygame.transform.scale(self.image, (50, 50))
-
-
-
-
-
-       
 
     def draw(self, screen):
         size = 10
