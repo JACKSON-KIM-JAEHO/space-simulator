@@ -1,8 +1,6 @@
 import pygame
 import math
-import copy
 import os
-from modules.behavior_tree import *
 from modules.utils import config, generate_positions 
 from modules.base_agent import BaseAgent
 from modules.task import task_colors

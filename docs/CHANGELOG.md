@@ -6,13 +6,14 @@
   - Separated `agent.py` into `base_agent.py` for general agent functionalities and (scenario_specific)`agent.py` for scenario-specific behaviors.
     - **`base_agent.py`** includes universal movement, communication, behavior tree initialization, and basic rendering.
     - **(scenario_specific)`agent.py`** adds task handling, scenario-specific rendering, and detailed behavior tree definitions.
+    - Modified `base_agent.py` to support the declaration of scenario-specific behavior trees. 
 
 ### Changes
 - **Scenario Configuration**
   - Added `scenario.environment` in `config.yaml` to specify the scenario module path (improved flexibility for switching scenarios by editing `config.yaml`). Example:
     ```yaml
     scenario:
-      environment: scenarios.simple.env
+      environment: scenarios.simple
     ```
   - Updated `main.py` to load the environment dynamically using:
     ```python
