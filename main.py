@@ -47,9 +47,18 @@ else:
 # screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 # background_color = (173, 255, 47)
 background_color = (224, 224, 224)
-background_image = pygame.image.load("C://Users//kimjaeho//space-simulator//image//background//city_view.png").convert()
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
+IMAGE_DIR = os.path.join(ASSETS_DIR, 'image')
+BACKGROUND_DIR = os.path.join(IMAGE_DIR, 'background')
+POINT_DIR = os.path.join(IMAGE_DIR, 'point')
+
+background_point_image_path = os.path.join(BACKGROUND_DIR, 'city_view.png')
+final_image_path = os.path.join(POINT_DIR, 'final_point.png')
+
+background_image = pygame.image.load(background_point_image_path).convert_alpha()
 background_image = pygame.transform.scale(background_image, (1400, 1400))
-final_point_image = pygame.image.load("C://Users//kimjaeho//space-simulator//image//point//final_point.png").convert()
+final_point_image = pygame.image.load(final_image_path).convert_alpha()
 final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
 
 # Set logo and title
