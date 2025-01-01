@@ -1,5 +1,7 @@
 # SPACE (Swarm Planning And Control Evaluation) Simulator
 
+![example event parameter](https://github.com/inmo-jang/space-simulator/actions/workflows/main_test.yaml/badge.svg)
+
 **SPACE** Simulator is a pygame-based application for simulating decentralized agent behavior using behavior trees. 
 By integrating your custom decision-making algorithms as plugins, SPACE enables rigorous testing and comparative analysis against pre-existing algorithms. 
 
