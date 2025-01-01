@@ -8,7 +8,6 @@ from modules.utils import set_config
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='SPACE (Swarm Planning And Control Evaluation) Simulator')
 parser.add_argument('--config', type=str, default='config.yaml', help='Path to the configuration file (default: --config=config.yaml)')
-parser.add_argument('--env_path', type=str, default='scenarios.simple.env', help='Path to the environment module (default: scenarios/simple/env.py)')
 args = parser.parse_args()
 
 # Load configuration and initialize the environment
@@ -17,7 +16,7 @@ from modules.utils import config
 
 
 # Dynamically import the environment module and Env class
-env_module = importlib.import_module(args.env_path)
+env_module = importlib.import_module(config.get('scenario').get('environment'))
 Env = getattr(env_module, "Env")
 # Initialize Env instance
 env = Env(config)

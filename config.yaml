@@ -1,3 +1,6 @@
+scenario: 
+  environment: scenarios.simple.env
+
 # decision_making: # Case 1
 #   plugin: plugins.grape.grape.GRAPE
 #   GRAPE:

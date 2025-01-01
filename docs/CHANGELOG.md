@@ -1,5 +1,19 @@
 # CHANGELOG.md
 
+## Version 1.2.14 (25-01-01)
+### Changes
+- **Scenario Configuration**
+  - Added `scenario.environment` in `config.yaml` to specify the scenario module path (improved flexibility for switching scenarios by editing `config.yaml`). Example:
+    ```yaml
+    scenario:
+      environment: scenarios.simple.env
+    ```
+  - Updated `main.py` to load the environment dynamically using:
+    ```python
+    env_module = importlib.import_module(config.get('scenario').get('environment'))
+    ```
+
+
 ## Version 1.2.13 (24-12-31)
 ### New Features
 - **Scenario Management (`main.py`, `env.py`)**
