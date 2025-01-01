@@ -2,7 +2,6 @@ import pygame
 import math
 import copy
 import os
-from modules.behavior_tree import *
 from modules.utils import config, generate_positions 
 from modules.base_agent import BaseAgent
 from modules.task import task_colors
@@ -24,20 +23,20 @@ class Agent(BaseAgent):
         self.task_amount_done = 0.0        
 
 
-        self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent.png')  # 기본 이미지
+        self.image = pygame.image.load('scenarios/harbor_logistics/assets/agents/agent.png')  # 기본 이미지
         self.image = pygame.transform.scale(self.image, (50, 50))  # 크기 조정
         self.task_color = None  # 현재 운반 중인 task 색상 (없으면 None)
 
     def update_image(self):
         """현재 상태에 따라 이미지를 업데이트"""
         if self.task_color == 'red':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_red_container.png')
+            self.image = pygame.image.load('scenarios/harbor_logistics/assets/agents/agent_with_red_container.png')
         elif self.task_color == 'blue':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_blue_container.png')
+            self.image = pygame.image.load('scenarios/harbor_logistics/assets/agents/agent_with_blue_container.png')
         elif self.task_color == 'yellow':
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent_with_yellow_container.png')
+            self.image = pygame.image.load('scenarios/harbor_logistics/assets/agents/agent_with_yellow_container.png')
         else:
-            self.image = pygame.image.load('scenarios/harbor_logistics/assets/Agents/agent.png')  # 기본 이미지
+            self.image = pygame.image.load('scenarios/harbor_logistics/assets/agents/agent.png')  # 기본 이미지
 
         # 이미지 크기 조정
         self.image = pygame.transform.scale(self.image, (50, 50))
@@ -52,6 +51,10 @@ class Agent(BaseAgent):
         size = 10
         angle = self.rotation
 
+        rotated_image = pygame.transform.rotate(self.image, -math.degrees(self.rotation))
+        new_rect = rotated_image.get_rect(center=(self.position.x, self.position.y))
+        screen.blit(rotated_image, new_rect.topleft)
+        
         # Calculate the triangle points based on the current position and angle
         p1 = pygame.Vector2(self.position.x + size * math.cos(angle), self.position.y + size * math.sin(angle))
         p2 = pygame.Vector2(self.position.x + size * math.cos(angle + 2.5), self.position.y + size * math.sin(angle + 2.5))

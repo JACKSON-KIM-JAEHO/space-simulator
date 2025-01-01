@@ -1,8 +1,7 @@
 import pygame
-import importlib
-from modules.utils import pre_render_text, ResultSaver
-from modules.task import generate_tasks
-from modules.agent import generate_agents
+from modules.utils import pre_render_text, ResultSaver, ObjectToRender
+from scenarios.harbor_logistics.task import generate_tasks
+from scenarios.harbor_logistics.agent import generate_agents
 
 class Env:
     def __init__(self, config):
@@ -36,6 +35,8 @@ class Env:
             self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.RESIZABLE)
             
             self.background_color = (224, 224, 224)
+            self.background_sea = None
+            self.background_port = None
 
             # Set logo and title
             logo_image_path = 'assets/logo.jpg'  # Change to the path of your logo image
@@ -46,8 +47,12 @@ class Env:
         else:
             self.screen = None
 
+        # Initialize the background and environment
+        self.set_background()
+
         # Initialize agents and tasks
         self.tasks = generate_tasks()
+        max_task_count = config['tasks']['quantity']  # config.yaml에 정의된 task 수
         self.agents = generate_agents(self.tasks)
 
         # Pre-rendered text
@@ -90,10 +95,43 @@ class Env:
             print("Recording started...") 
 
 
+    def set_background(self):
+        assets_path = 'scenarios/harbor_logistics/assets'                
+        # Load the background image
+        background_port = pygame.image.load(assets_path + '/background/ground.png')
+        self.background_port = pygame.transform.scale(background_port, (self.screen_width, self.screen_height))  # Resize
+
+        # Load sea background image for ship area
+        sea_background = pygame.image.load(assets_path + '/background/sea.png')
+        self.background_sea = pygame.transform.scale(sea_background, (250, 1200))  # Resize
+
+        # Ship
+        self.ship = ObjectToRender(image_path=assets_path + '/background/ship.png', position=(60, 250), width=550, height=200, rotation=90)
+
+        # Load container images
+        self.container_images = {
+            'red': pygame.image.load(assets_path + '/tasks/red.png'),
+            'blue': pygame.image.load(assets_path + '/tasks/blue.png'),
+            'yellow': pygame.image.load(assets_path + '/tasks/yellow.png')
+        }     
+
+        # Resize container images
+        container_width = 80
+        container_height = 150
+        for color in self.container_images:
+            self.container_images[color] = pygame.transform.scale(self.container_images[color], (container_width, container_height))
+        # Define spacing between containers
+        container_spacing = 150  # 간격 값을 150으로 설정
+
+        # Define container positions with updated spacing
+        self.container_positions = [(self.screen_width - 100, 110 + i * (container_height + container_spacing)) for i in range(len(self.container_images))]
+
+
 
     async def step(self):
         # Main simulation loop logic
         for agent in self.agents:
+            # agent.assign_nearest_task() # TODO: 이거는 tree 안으로 들어가야함. 
             await agent.run_tree()
             agent.update()
 
@@ -103,9 +141,13 @@ class Env:
         if self.tasks_left == 0:
             self.mission_completed = not self.generation_enabled or self.generation_count == self.max_generations
 
-        # Dynamic task generation
-        if self.generation_enabled:
-            self.generate_tasks_if_needed()
+        # NOTE: 아래는 민지님 구현 한 부분. 이해 필요. 
+        # if tasks_left == 0 and len(tasks) < max_task_count:
+        #     new_task = generate_tasks(task_id_start=len(tasks))
+        #     tasks.append(new_task)
+        #     print(f"New Task {new_task.task_id_start} generated at {new_task.position}")
+        # elif len(tasks) == max_task_count and tasks_left == 0:
+        #     mission_completed = True  # 모든 작업이 완료되면 미션 종료
 
 
         # Stop if maximum simulation time reached
@@ -114,8 +156,18 @@ class Env:
 
     def render(self):
         if self.rendering_mode == "Screen" and self.screen:
-            self.screen.fill(self.background_color)
+            # Draw Port background
+            self.screen.blit(self.background_port, (0, 0))  
+            # Draw Sea background under the ship
+            self.screen.blit(self.background_sea, (00, self.screen_height - 1200))  # 배경 위치 조정            
             
+            # Draw ship
+            self.ship.draw(self.screen)            
+
+            # Draw containers
+            for i, (color, position) in enumerate(zip(self.container_images, self.container_positions)):
+                self.screen.blit(self.container_images[color], position)
+
             # Draw agents network topology
             if self.rendering_options.get('agent_communication_topology'):
                 for agent in self.agents:
@@ -127,6 +179,9 @@ class Env:
                     agent.draw_path_to_assigned_tasks(self.screen)                    
                 if self.rendering_options.get('agent_tail'): # Draw each agent's trajectory tail
                     agent.draw_tail(self.screen)
+                    # TODO: 아래는 민지님 코드
+                    # agent.draw_path_to_assigned_tasks(screen) 
+                    # agent.draw_path_to_destination(screen)                      
                 if self.rendering_options.get('agent_id'): # Draw each agent's ID
                     agent.draw_agent_id(self.screen)
                 if self.rendering_options.get('agent_assigned_task_id'): # Draw each agent's assigned task ID

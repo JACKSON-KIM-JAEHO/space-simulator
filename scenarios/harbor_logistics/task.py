@@ -5,7 +5,20 @@ dynamic_task_generation = config['tasks'].get('dynamic_task_generation', {})
 max_generations = dynamic_task_generation.get('max_generations', 0) if dynamic_task_generation.get('enabled', False) else 0
 tasks_per_generation = dynamic_task_generation.get('tasks_per_generation', 0) if dynamic_task_generation.get('enabled', False) else 0
 
-task_colors = generate_task_colors(config['tasks']['quantity'] + tasks_per_generation*max_generations)
+# TODO: 아래 Refactoring 필요
+screen_width = config['simulation']['screen_width']
+task_colors = ['red', 'blue', 'yellow']
+container_width = 80
+container_height = 150
+container_spacing = 150  # 간격 값을 150으로 설정
+# Define container positions with updated spacing
+container_positions = [(screen_width - 100, 110 + i * (container_height + container_spacing)) for i in range(len(task_colors))]
+container_images = {
+    'red': pygame.image.load('scenarios/harbor_logistics/assets/tasks/red.png'),
+    'blue': pygame.image.load('scenarios/harbor_logistics/assets/tasks/blue.png'),
+    'yellow': pygame.image.load('scenarios/harbor_logistics/assets/tasks/yellow.png')
+}
+
 
 sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
@@ -16,7 +29,17 @@ class Task:
         self.amount = random.uniform(config['tasks']['amounts']['min'], config['tasks']['amounts']['max'])
         self.radius = self.amount / config['simulation']['task_visualisation_factor']
         self.completed = False
-        self.color = task_colors.get(self.task_id, (0, 0, 0))  # Default to black if task_id not found
+        self.assigned_to = None
+        random_index = random.randrange(len(task_colors))
+        self.color = task_colors[random_index]
+        self.position_to_deliver = container_positions[random_index]
+        # container 크기로 이미지를 조정
+        container_width = 35
+        container_height = 50        
+        self.image = pygame.transform.scale(container_images[self.color], (container_width, container_height))
+
+    def set_assigned_to(self, agent_id):
+        self.assigned_to = agent_id
 
     def set_done(self):
         self.completed = True
@@ -27,9 +50,8 @@ class Task:
             self.set_done()
 
     def draw(self, screen):
-        self.radius = self.amount / config['simulation']['task_visualisation_factor']        
-        if not self.completed:
-            pygame.draw.circle(screen, self.color, self.position, int(self.radius))
+        if self.assigned_to is None:
+            screen.blit(self.image, (self.position[0] - container_width // 2, self.position[1] - container_height // 2))            
 
     def draw_task_id(self, screen):
         if not self.completed:

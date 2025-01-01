@@ -1,6 +1,11 @@
 # CHANGELOG.md
 
 ## Version 1.2.14 (25-01-01)
+### New Scenario
+- **Harbor Logistics**:
+  - Updated for scenario-specific rendering (`agent.py`, `task.py`, `utils.py`, `env.py`).
+  - Implemented agent behavior for the harbor logistics scenario through new behavior tree configurations (`behavior_tree.py`, `default_bt.xml`).
+
 ### New Features
 - **Agent Refactoring (`base_agent.py`, (scenario_specific) `agent.py`)**:
   - Separated `agent.py` into `base_agent.py` for general agent functionalities and (scenario_specific)`agent.py` for scenario-specific behaviors.
