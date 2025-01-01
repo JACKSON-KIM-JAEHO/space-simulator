@@ -15,6 +15,8 @@ class BehaviorTreeList:
         'ExplorationNode'
     ]
 
+    CONDITION_NODES = [
+    ]
 
 # Status enumeration for behavior tree nodes
 class Status(Enum):

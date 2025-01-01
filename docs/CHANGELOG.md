@@ -8,6 +8,10 @@
     - **(scenario_specific)`agent.py`** adds task handling, scenario-specific rendering, and detailed behavior tree definitions.
     - Modified `base_agent.py` to support the declaration of scenario-specific behavior trees. 
 
+- **Agent Functionality Expansion**:
+  - Introduced a new method `get_unassigned_tasks()` in `base_agent.py`. This method enhances task management by enabling the detection of tasks that have not yet been assigned to any agent.
+
+
 ### Changes
 - **Scenario Configuration**
   - Added `scenario.environment` in `config.yaml` to specify the scenario module path (improved flexibility for switching scenarios by editing `config.yaml`). Example:
@@ -20,6 +24,8 @@
     env_module = importlib.import_module(config.get('scenario').get('environment'))
     ```
 
+- **Behavior Tree Enhancements**:
+  - Prepared for future implementation of Post-conditions, Preconditions, Actions Behavior Tree (PPA-BT) with the integration of condition nodes in the behavior tree structure.
 
 ## Version 1.2.13 (24-12-31)
 ### New Features
