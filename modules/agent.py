@@ -4,8 +4,23 @@ import copy
 from modules.behavior_tree import *
 from modules.utils import config, generate_positions, parse_behavior_tree
 from modules.task import task_colors
+import os
 
-car_image = pygame.image.load("C://Users//kimjaeho//univ//spade-simulator//image//car//white.png").convert_alpha()
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # 상위 폴더로 이동
+ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
+IMAGE_DIR = os.path.join(ASSETS_DIR, 'image')
+CAR_DIR = os.path.join(IMAGE_DIR, 'car')
+DRONE_DIR = os.path.join(IMAGE_DIR, 'drone')
+car_image_path = os.path.join(CAR_DIR, 'white.png')
+drone_image_path_1 = os.path.join(DRONE_DIR, 'drone_1.png')
+drone_image_path_2 = os.path.join(DRONE_DIR, 'drone_2.png')
+drone_image_path_3 = os.path.join(DRONE_DIR, 'drone_3.png')
+
+car_image = pygame.image.load(car_image_path).convert_alpha()
+drone_1_image = pygame.image.load(drone_image_path_1).convert_alpha()
+drone_2_image = pygame.image.load(drone_image_path_2).convert_alpha()
+drone_3_image = pygame.image.load(drone_image_path_3).convert_alpha()
+
 
 # Load agent configuration
 agent_max_speed = config['agents']['max_speed']
@@ -57,9 +72,7 @@ class Agent:
 
         # Load rotating blade images
         self.drone_images = [
-            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_1.png").convert_alpha(),
-            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_2.png").convert_alpha(),
-            pygame.image.load("C://Users//kimjaeho//space-simulator//image//drone//drone_3.png").convert_alpha(),
+            drone_1_image, drone_2_image, drone_3_image
             # Add more images for smoother rotation if available
         ]
         self.blade_image_index = 0
