@@ -1,6 +1,12 @@
 # CHANGELOG.md
 
 ## Version 1.2.14 (25-01-01)
+### New Features
+- **Agent Refactoring (`base_agent.py`, (scenario_specific) `agent.py`)**:
+  - Separated `agent.py` into `base_agent.py` for general agent functionalities and (scenario_specific)`agent.py` for scenario-specific behaviors.
+    - **`base_agent.py`** includes universal movement, communication, behavior tree initialization, and basic rendering.
+    - **(scenario_specific)`agent.py`** adds task handling, scenario-specific rendering, and detailed behavior tree definitions.
+
 ### Changes
 - **Scenario Configuration**
   - Added `scenario.environment` in `config.yaml` to specify the scenario module path (improved flexibility for switching scenarios by editing `config.yaml`). Example:

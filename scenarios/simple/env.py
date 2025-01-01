@@ -2,7 +2,7 @@ import pygame
 import importlib
 from modules.utils import pre_render_text, ResultSaver
 from modules.task import generate_tasks
-from modules.agent import generate_agents
+from scenarios.simple.agent import generate_agents
 
 class Env:
     def __init__(self, config):
