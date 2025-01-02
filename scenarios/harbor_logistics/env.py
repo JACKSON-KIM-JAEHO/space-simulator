@@ -299,7 +299,8 @@ class Env:
         agents_total_distance_moved = sum(agent.distance_moved for agent in self.agents)
         agents_total_task_amount_done = sum(agent.task_amount_done for agent in self.agents)
         remaining_tasks = len([task for task in self.tasks if not task.completed])
-        tasks_total_amount_left = sum(task.amount for task in self.tasks)
+        # tasks_total_amount_left = sum(task.amount for task in self.tasks) TODO: Refactor
+        tasks_total_amount_left = 0
         
         self.data_records.append([
             self.simulation_time, 

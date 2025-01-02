@@ -1,6 +1,7 @@
 import pygame
 import random
 from modules.utils import config, generate_positions, generate_task_colors
+from modules.base_task import BaseTask
 import os
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__)) 
@@ -28,19 +29,14 @@ task_colors = generate_task_colors(config['tasks']['quantity'] + tasks_per_gener
 
 sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
-class Task:
+class Task(BaseTask):
     def __init__(self, task_id, position, color, is_start = True):
-        self.task_id = task_id
-        self.position = pygame.Vector2(position)
-        self.amount = random.uniform(config['tasks']['amounts']['min'], config['tasks']['amounts']['max'])
+        super().__init__(task_id, position)
+        self.amount = random.uniform(config['tasks']['amounts']['min'], config['tasks']['amounts']['max'])        
         self.radius = self.amount / config['simulation']['task_visualisation_factor']
-        self.completed = False
         self.color = task_colors.get(self.task_id, (0, 0, 0))  # Default to black if task_id not found
         self.is_start = is_start
         self.assigned = False
-
-    def set_done(self):
-        self.completed = True
 
     def reduce_amount(self, work_rate):
         self.amount -= work_rate * sampling_time
@@ -48,7 +44,6 @@ class Task:
             self.set_done()
 
     def draw(self, screen):
-        self.radius = self.amount / config['simulation']['task_visualisation_factor']        
         if not self.completed:
             image_rect = resized_start_image.get_rect(center=(self.position.x, self.position.y)) if self.is_start else resized_end_image.get_rect(center=(self.position.x, self.position.y))
             if self.is_start:
@@ -56,11 +51,6 @@ class Task:
             else:
                 screen.blit(resized_end_image, image_rect.topleft)
 
-    def draw_task_id(self, screen):
-        if not self.completed:
-            font = pygame.font.Font(None, 15)
-            text_surface = font.render(f"task_id {self.task_id}: {self.amount:.2f}", True, (250, 250, 250))
-            screen.blit(text_surface, (self.position[0], self.position[1]))
     def get_pair_task_id(self):
         """ Returns the task_id of the paired task (start for end, and end for start) """
         return self.task_id + 1 if self.is_start else self.task_id - 1

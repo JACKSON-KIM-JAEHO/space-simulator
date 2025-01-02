@@ -12,7 +12,8 @@
 ### Refactorings
 - **Behavior Tree File Renaming and Restructuring**:
   - Separated the original `behavior_tree.py` implementation into `base_behavior_tree.py` and scenario-specific files for better organization and clarity. Renamed these files to `base_bt_nodes.py` for the base behavior tree nodes and `bt_nodes.py` for each scenario-specific implementation to enhance clarity and explicitness in naming. 
-
+- **`task.py` Restructuring**:
+  - Separated the original `task.py` implementation into `base_task.py` and scenario-specific `task.py` for better organization and clarity.
 
 
 ## Version 1.2.14 (25-01-01)
