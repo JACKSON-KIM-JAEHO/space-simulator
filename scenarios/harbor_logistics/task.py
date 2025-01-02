@@ -9,12 +9,12 @@ from modules.base_task import BaseTask
 
 # TODO: 아래 Refactoring 필요
 screen_width = config['simulation']['screen_width']
-task_colors = ['red', 'blue', 'yellow']
+container_colors = ['red', 'blue', 'yellow']
 container_width = 80
 container_height = 150
 container_spacing = 150  # 간격 값을 150으로 설정
 # Define container positions with updated spacing
-container_positions = [(screen_width - 100, 110 + i * (container_height + container_spacing)) for i in range(len(task_colors))]
+container_positions = [(screen_width - 100, 110 + i * (container_height + container_spacing)) for i in range(len(container_colors))]
 container_images = {
     'red': pygame.image.load('scenarios/harbor_logistics/assets/tasks/red.png'),
     'blue': pygame.image.load('scenarios/harbor_logistics/assets/tasks/blue.png'),
@@ -29,8 +29,8 @@ class Task(BaseTask):
         super().__init__(task_id, position)
         # self.radius = self.amount / config['simulation']['task_visualisation_factor']
         self.assigned_to = None
-        random_index = random.randrange(len(task_colors))
-        self.color = task_colors[random_index]
+        random_index = random.randrange(len(container_colors))
+        self.color = container_colors[random_index]
         self.position_to_deliver = container_positions[random_index]
         # container 크기로 이미지를 조정
         container_width = 35

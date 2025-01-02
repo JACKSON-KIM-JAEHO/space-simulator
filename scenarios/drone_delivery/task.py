@@ -38,10 +38,6 @@ class Task(BaseTask):
         self.is_start = is_start
         self.assigned = False
 
-    def reduce_amount(self, work_rate):
-        self.amount -= work_rate * sampling_time
-        if self.amount <= 0:
-            self.set_done()
 
     def draw(self, screen):
         if not self.completed:

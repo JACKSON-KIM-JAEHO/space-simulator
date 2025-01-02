@@ -22,8 +22,6 @@ class Env(BaseEnv):
         self.data_records = []
         self.result_saver = ResultSaver(config)
 
-
-
     def set_background(self):
         CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
         ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
@@ -37,8 +35,6 @@ class Env(BaseEnv):
         self.background_image = pygame.transform.scale(background_image, (1400, 1400))
         final_point_image = pygame.image.load(final_image_path).convert_alpha()
         self.final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
-
-
 
     async def step(self):
         await super().step() # Execution of `step()` in `BaseEnv`           
@@ -69,12 +65,6 @@ class Env(BaseEnv):
             start_task.draw(self.screen)
             end_task.draw(self.screen) 
     
-
-
-    def close(self):
-        pygame.quit()
-        self.save_results()
-
     def save_results(self):
         # Save gif
         if self.save_gif and self.rendering_mode == "Screen":        
@@ -100,8 +90,6 @@ class Env(BaseEnv):
         # if self.save_config_yaml:                
             # self.result_saver.save_config_yaml()           
 
-
-   
     def record_timewise_result(self):
         agents_total_distance_moved = sum(agent.distance_moved for agent in self.agents)
         agents_total_task_amount_done = sum(agent.task_amount_done for agent in self.agents)

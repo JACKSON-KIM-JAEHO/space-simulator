@@ -154,8 +154,8 @@ class BaseEnv:
             self.draw_agents()
 
             # Draw tasks & their auxiliary information
-            self.draw_tasks_info()
             self.draw_tasks()
+            self.draw_tasks_info()            
 
             # Display task quantity and elapsed simulation time                
             task_time_text = pre_render_text(f'Tasks left: {self.tasks_left}; Time: {self.simulation_time:.2f}s', 36, (0, 0, 0))
@@ -194,7 +194,11 @@ class BaseEnv:
 
     def close(self):
         pygame.quit()
+        self.save_results()
 
+    def save_results():
+        # Define it at your scenario-specific `env.py`
+        pass
 
     def generate_tasks_if_needed(self):
         """Generate new tasks dynamically based on configuration."""

@@ -20,7 +20,6 @@ class Env(BaseEnv):
         self.data_records = []
         self.result_saver = ResultSaver(config)
 
-
     def set_background(self):
         assets_path = 'scenarios/harbor_logistics/assets'                
         # Load the background image
@@ -51,8 +50,6 @@ class Env(BaseEnv):
 
         # Define container positions with updated spacing
         self.container_positions = [(self.screen_width - 100, 110 + i * (container_height + container_spacing)) for i in range(len(self.container_images))]
-
-
 
     async def step(self):
         await super().step() # Execution of `step()` in `BaseEnv`        
@@ -88,12 +85,6 @@ class Env(BaseEnv):
                 # agent.draw_path_to_assigned_tasks(screen) 
                 # agent.draw_path_to_destination(screen)                      
 
-             
-
-    def close(self):
-        pygame.quit()
-        self.save_results()
-
     def save_results(self):
         # Save gif
         if self.save_gif and self.rendering_mode == "Screen":        
@@ -119,7 +110,6 @@ class Env(BaseEnv):
         # if self.save_config_yaml:                
             # self.result_saver.save_config_yaml()           
 
-    
     def record_timewise_result(self):
         agents_total_distance_moved = sum(agent.distance_moved for agent in self.agents)
         agents_total_task_amount_done = sum(agent.task_amount_done for agent in self.agents)

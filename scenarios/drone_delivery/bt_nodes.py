@@ -34,7 +34,19 @@ agent_max_random_movement_duration = config.get('agents', {}).get('random_explor
 # TODO: 나중에 변경 필요
 from scenarios.drone_delivery.decision_making.simple import MyDecisionMakingClass as decision_making_class
 
+# Decision-making node -- Override # TODO - 이것도 원래 template에 맞지 않는 form임. 변경 필요
+class DecisionMakingNode(SyncAction):
+    def __init__(self, name, agent):
+        super().__init__(name, self._decide)
+        self.decision_maker = decision_making_class(agent)
 
+    def _decide(self, agent, blackboard):
+        assigned_task_id = self.decision_maker.decide(blackboard)
+        if assigned_task_id is None:
+            return Status.FAILURE
+        agent.set_assigned_task_id(assigned_task_id)
+        return Status.SUCCESS
+    
 #Checking items Node
 class CheckingitemsNode(SyncAction):
     def __init__(self, name, agent):

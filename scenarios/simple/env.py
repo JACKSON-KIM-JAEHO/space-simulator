@@ -18,11 +18,6 @@ class Env(BaseEnv):
         self.data_records = []
         self.result_saver = ResultSaver(config)
            
-
-    def close(self): 
-        super().close() # Execution of `close()` in `BaseEnv`
-        self.save_results()
-
     def save_results(self):
         # Save gif
         if self.save_gif and self.rendering_mode == "Screen":        
@@ -47,8 +42,6 @@ class Env(BaseEnv):
         # Save yaml: TODO - To debug
         # if self.save_config_yaml:                
             # self.result_saver.save_config_yaml()           
-
-
    
     def record_timewise_result(self):
         agents_total_distance_moved = sum(agent.distance_moved for agent in self.agents)
