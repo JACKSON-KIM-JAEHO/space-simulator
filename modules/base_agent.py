@@ -1,9 +1,8 @@
 import pygame
 import math
-import copy
-from modules.behavior_tree import *
-from modules.utils import config, generate_positions, parse_behavior_tree
-from modules.task import task_colors
+from modules.utils import config, parse_behavior_tree
+import importlib
+bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
 
 # Load agent configuration
 agent_max_speed = config['agents']['max_speed']
@@ -11,16 +10,12 @@ agent_max_accel = config['agents']['max_accel']
 max_angular_speed = config['agents']['max_angular_speed']
 agent_approaching_to_target_radius = config['agents']['target_approaching_radius']
 agent_track_size = config['simulation']['agent_track_size']
-work_rate = config['agents']['work_rate']
 agent_communication_radius = config['agents']['communication_radius']
 agent_situation_awareness_radius = config.get('agents', {}).get('situation_awareness_radius', 0)
-font = pygame.font.Font(None, 15)
+sampling_time = 1.0 / config['simulation']['sampling_freq']  # in seconds
 
-# Load behavior tree
-behavior_tree_xml = config['agents']['behavior_tree_xml']
-xml_root = parse_behavior_tree(f"bt_xml/{behavior_tree_xml}")
 
-class Agent:
+class BaseAgent:
     def __init__(self, agent_id, position, tasks_info):
         self.agent_id = agent_id
         self.position = pygame.Vector2(position)
@@ -29,10 +24,10 @@ class Agent:
         self.max_speed = agent_max_speed
         self.max_accel = agent_max_accel
         self.max_angular_speed = max_angular_speed
-        self.work_rate = work_rate
         self.memory_location = []  # To draw track
         self.rotation = 0  # Initial rotation
         self.color = (0, 0, 255)  # Blue color
+        self.font = pygame.font.Font(None, 15)
         self.blackboard = {}
 
         self.tasks_info = tasks_info # global info
@@ -43,18 +38,19 @@ class Agent:
         self.message_to_share = {}
         self.messages_received = []
 
+        self.distance_moved = 0.0
+        self.task_amount_done = 0.0
+
         self.assigned_task_id = None         # Local decision-making result.
         self.planned_tasks = []              # Local decision-making result.
-        
 
-        self.distance_moved = 0.0
-        self.task_amount_done = 0.0        
 
-    def create_behavior_tree(self):
-        self.tree = self._create_behavior_tree()
+    def create_behavior_tree(self, behavior_tree_xml):        
+        xml_root = parse_behavior_tree(behavior_tree_xml)        
+        self.tree = self._create_behavior_tree(xml_root)
 
     # Agent's Behavior Tree
-    def _create_behavior_tree(self):
+    def _create_behavior_tree(self, xml_root):
         behavior_tree = self._parse_xml_to_bt(xml_root.find('BehaviorTree'))
         return behavior_tree        
     
@@ -65,11 +61,14 @@ class Agent:
         for child in xml_node:
             children.append(self._parse_xml_to_bt(child))
 
-        if node_type in BehaviorTreeList.CONTROL_NODES:
-            control_class = globals()[node_type]  # Control class should be globally available
+        BTNodeList = getattr(bt_module, "BTNodeList")        
+        if node_type in BTNodeList.CONTROL_NODES:
+            # control_class = globals()[node_type]  # Control class should be globally available
+            control_class = getattr(bt_module, node_type)
             return control_class(node_type, children=children)
-        elif node_type in BehaviorTreeList.ACTION_NODES:
-            action_class = globals()[node_type]  # Action class should be globally available
+        elif node_type in BTNodeList.ACTION_NODES + BTNodeList.CONDITION_NODES:
+            # action_class = globals()[node_type]  # Action class should be globally available
+            action_class = getattr(bt_module, node_type)
             return action_class(node_type, self)
         elif node_type == "BehaviorTree": # Root
             return children[0]
@@ -77,7 +76,8 @@ class Agent:
             raise ValueError(f"[ERROR] Unknown behavior node type: {node_type}")    
 
     def _reset_bt_action_node_status(self):
-        action_nodes = BehaviorTreeList.ACTION_NODES
+        BTNodeList = getattr(bt_module, "BTNodeList")        
+        action_nodes = BTNodeList.ACTION_NODES
         self.blackboard = {key: None if key in action_nodes else value for key, value in self.blackboard.items()}
 
 
@@ -172,47 +172,6 @@ class Agent:
         self.update_color()
         pygame.draw.polygon(screen, self.color, [p1, p2, p3])
 
-
-    def draw_tail(self, screen):
-        # Draw track
-        if len(self.memory_location) >= 2:
-            pygame.draw.lines(screen, self.color, False, self.memory_location, 1)               
-        
-
-    def draw_communication_topology(self, screen, agents):
-     # Draw lines to neighbor agents
-        for neighbor_agent in self.agents_nearby:
-            if neighbor_agent.agent_id > self.agent_id:
-                neighbor_position = agents[neighbor_agent.agent_id].position
-                pygame.draw.line(screen, (200, 200, 200), (int(self.position.x), int(self.position.y)), (int(neighbor_position.x), int(neighbor_position.y)))
-
-    def draw_agent_id(self, screen):
-        # Draw assigned_task_id next to agent position
-        text_surface = font.render(f"agent_id: {self.agent_id}", True, (50, 50, 50))
-        screen.blit(text_surface, (self.position[0] + 10, self.position[1] - 10))
-
-    def draw_assigned_task_id(self, screen):
-        # Draw assigned_task_id next to agent position
-        if len(self.planned_tasks) > 0:
-            assigned_task_id_list = [task.task_id for task in self.planned_tasks]
-        else:
-            assigned_task_id_list = self.assigned_task_id
-        text_surface = font.render(f"task_id: {assigned_task_id_list}", True, (50, 50, 50))
-        screen.blit(text_surface, (self.position[0] + 10, self.position[1]))
-
-    def draw_work_done(self, screen):
-        # Draw assigned_task_id next to agent position
-        text_surface = font.render(f"dist: {self.distance_moved:.1f}", True, (50, 50, 50))
-        screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 10))
-        text_surface = font.render(f"work: {self.task_amount_done:.1f}", True, (50, 50, 50))
-        screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 20))
-
-
-    def draw_situation_awareness_circle(self, screen):
-        # Draw the situation awareness radius circle    
-        if self.situation_awareness_radius > 0:    
-            pygame.draw.circle(screen, self.color, (self.position[0], self.position[1]), self.situation_awareness_radius, 1)
-
     def draw_path_to_assigned_tasks(self, screen):
         # Starting position is the agent's current position
         start_pos = self.position
@@ -248,17 +207,49 @@ class Agent:
             # Update the start position for the next segment
             start_pos = task_position
 
+    def draw_tail(self, screen):
+        # Draw track
+        if len(self.memory_location) >= 2:
+            pygame.draw.lines(screen, self.color, False, self.memory_location, 1)               
 
-    def update_color(self):        
-        self.color = task_colors.get(self.assigned_task_id, (20, 20, 20))  # Default to Dark Grey if no task is assigned
+    def draw_communication_topology(self, screen, agents):
+     # Draw lines to neighbor agents
+        for neighbor_agent in self.agents_nearby:
+            if neighbor_agent.agent_id > self.agent_id:
+                neighbor_position = agents[neighbor_agent.agent_id].position
+                pygame.draw.line(screen, (200, 200, 200), (int(self.position.x), int(self.position.y)), (int(neighbor_position.x), int(neighbor_position.y)))
 
+    def draw_agent_id(self, screen):
+        # Draw assigned_task_id next to agent position
+        text_surface = self.font.render(f"agent_id: {self.agent_id}", True, (50, 50, 50))
+        screen.blit(text_surface, (self.position[0] + 10, self.position[1] - 10))
+
+    def draw_assigned_task_id(self, screen):
+        # Draw assigned_task_id next to agent position
+        if len(self.planned_tasks) > 0:
+            assigned_task_id_list = [task.task_id for task in self.planned_tasks]
+        else:
+            assigned_task_id_list = self.assigned_task_id
+        text_surface = self.font.render(f"task_id: {assigned_task_id_list}", True, (50, 50, 50))
+        screen.blit(text_surface, (self.position[0] + 10, self.position[1]))
+
+    def draw_work_done(self, screen):
+        # Draw assigned_task_id next to agent position
+        text_surface = self.font.render(f"dist: {self.distance_moved:.1f}", True, (50, 50, 50))
+        screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 10))
+        text_surface = self.font.render(f"work: {self.task_amount_done:.1f}", True, (50, 50, 50))
+        screen.blit(text_surface, (self.position[0] + 10, self.position[1] + 20))
+
+    def draw_situation_awareness_circle(self, screen):
+        # Draw the situation awareness radius circle    
+        if self.situation_awareness_radius > 0:    
+            pygame.draw.circle(screen, self.color, (self.position[0], self.position[1]), self.situation_awareness_radius, 1)
 
     def set_assigned_task_id(self, task_id):
         self.assigned_task_id = task_id
 
     def set_planned_tasks(self, task_list): # This is for visualisation
         self.planned_tasks = task_list    
-
 
     def set_global_info_agents(self, agents_info):
         self.agents_info = agents_info
@@ -305,26 +296,10 @@ class Agent:
         
         return local_tasks_info  
     
+    def get_unassigned_tasks(self):
+        """ Retrieve tasks that are not yet assigned, specifically where assigned_to is None. """
+        unassigned_tasks = [task for task in self.tasks_info if task.assigned_to is None]
+        return unassigned_tasks
+
     def update_task_amount_done(self, amount):
         self.task_amount_done += amount
-
-def generate_agents(tasks_info):
-    agent_quantity = config['agents']['quantity']
-    agent_locations = config['agents']['locations']
-
-    agents_positions = generate_positions(agent_quantity,
-                                      agent_locations['x_min'],
-                                      agent_locations['x_max'],
-                                      agent_locations['y_min'],
-                                      agent_locations['y_max'],
-                                      radius=agent_locations['non_overlap_radius'])
-
-    # Initialize agents
-    agents = [Agent(idx, pos, tasks_info) for idx, pos in enumerate(agents_positions)]
-
-    # Provide the global info and create behavior tree
-    for agent in agents:
-        agent.set_global_info_agents(agents)
-        agent.create_behavior_tree()
-
-    return agents

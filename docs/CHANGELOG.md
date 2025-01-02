@@ -1,5 +1,71 @@
 # CHANGELOG.md
 
+## Version 1.2.15 (25-01-02)
+### New Scenario
+- **Drone Delivery**:
+  - Introduced a new "Drone Delivery" scenario created by Jaeho Kim. This scenario involves multiple robots performing pick-up and delivery tasks through dynamic task allocation, enhancing mission execution capabilities.
+
+  - **Modifications Required**
+    - **Agent Behavior Compatibility**: Current implementation of agent behaviors lacks compatibility with established plugins like GRAPE and CBBA. Specifically, tasks are not singular instances of pick-up and delivery; instead, they are defined in pairs as either pick-up or delivery, dictated by odd/even designations. This requires modification to align with standard task representation practices.
+    - **Decision-Making Plugin Limitations**: The current implementation of the decision-making plugin (`scenarios/drone_delivery/decision_making/simple.py`) is not fully developed and serves as a temporary solution tailored specifically to the current scenario. Further development is required to enhance its robustness and applicability to broader contexts.
+
+### Refactorings
+- **Behavior Tree File Renaming and Restructuring**:
+  - Separated the original `behavior_tree.py` implementation into `base_behavior_tree.py` and scenario-specific files for better organization and clarity. Renamed these files to `base_bt_nodes.py` for the base behavior tree nodes and `bt_nodes.py` for each scenario-specific implementation to enhance clarity and explicitness in naming. 
+- **`task.py` Restructuring**:
+  - Separated the original `task.py` implementation into `base_task.py` and scenario-specific `task.py` for better organization and clarity.
+- **`env.py` Restructuring**:
+  - Separated the original `env.py` implementation into `base_env.py` and scenario-specific `task.py` for better organization and clarity.
+
+
+## Version 1.2.14 (25-01-01)
+### New Scenario
+- **Harbor Logistics**:
+  - Updated for scenario-specific rendering (`agent.py`, `task.py`, `utils.py`, `env.py`).
+  - Implemented agent behavior for the harbor logistics scenario through new behavior tree configurations (`behavior_tree.py`, `default_bt.xml`). (created by Minji Jang)
+
+### New Features
+- **Agent Refactoring (`base_agent.py`, (scenario_specific) `agent.py`)**:
+  - Separated `agent.py` into `base_agent.py` for general agent functionalities and (scenario_specific)`agent.py` for scenario-specific behaviors.
+    - **`base_agent.py`** includes universal movement, communication, behavior tree initialization, and basic rendering.
+    - **(scenario_specific)`agent.py`** adds task handling, scenario-specific rendering, and detailed behavior tree definitions.
+    - Modified `base_agent.py` to support the declaration of scenario-specific behavior trees. 
+
+- **Agent Functionality Expansion**:
+  - Introduced a new method `get_unassigned_tasks()` in `base_agent.py`. This method enhances task management by enabling the detection of tasks that have not yet been assigned to any agent.
+
+
+### Changes
+- **Scenario Configuration**
+  - Added `scenario.environment` in `config.yaml` to specify the scenario module path (improved flexibility for switching scenarios by editing `config.yaml`). Example:
+    ```yaml
+    scenario:
+      environment: scenarios.simple
+    ```
+  - Updated `main.py` to load the environment dynamically using:
+    ```python
+    env_module = importlib.import_module(config.get('scenario').get('environment'))
+    ```
+
+- **Behavior Tree Enhancements**:
+  - Prepared for future implementation of Post-conditions, Preconditions, Actions Behavior Tree (PPA-BT) with the integration of condition nodes in the behavior tree structure.
+
+## Version 1.2.13 (24-12-31)
+### New Features
+- **Scenario Management (`main.py`, `env.py`)**
+  - Refactored the simulation structure by separating `main.py` and scenario-specific logic into `env.py`. 
+    - This allows for better management of multiple scenarios by keeping scenario-specific implementations modular.
+    - The existing functionality of `main.py` has been retained in `env.py` with minimal modifications to maintain compatibility.
+### Known bugs and limitations
+  - **Status Variables**: `env.py` should encapsulate its status variables in a dictionary format and provide a unified `observe()` method for external access.
+  - **Decision-Making Status Display**: The `decision_making_module.draw_decision_making_status()` method in `env.py` for rendering is currently confusing and has been commented out for simplification.
+  - **Result Saving**: Consider whether functions like `record_gif`, `save_timewise`, and `save_agentwise` should reside in `main.py` or `env.py`. Current implementation retains them in `env.py`.
+  - **Configuration Saving**: The `save_config_yaml()` function depends on `config.args`, which is not passed to `env.py`. This has been commented out and will require handling in `main.py`.
+
+### Changes
+- **Minor Revision**
+  - `agent.py`: remove an unnecessary global variable (i.e., `font`) outside `Agent` class. 
+
 ## Version 1.2.12 (24-08-20)
 ### Changes
 - **Simulation**

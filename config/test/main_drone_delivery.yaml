@@ -29,7 +29,7 @@ decision_making: # Case 2
 
 agents:
   behavior_tree_xml: default_bt.xml 
-  quantity: 1
+  quantity: 10
   locations:
     x_min: 0
     x_max: 1400
@@ -66,7 +66,7 @@ tasks:
 simulation:
   sampling_freq: 1.0 
   speed_up_factor: 0 # 0 mean max booster; 1 means normal; 10 means 10-times faster
-  max_simulation_time: 0 # 0 means no limit
+  max_simulation_time: 500 # 0 means no limit
   agent_track_size: 400  
   screen_width: 1400 
   screen_height: 1000 
@@ -82,7 +82,7 @@ simulation:
     agent_work_done: True
     agent_assigned_task_id: True
     agent_path_to_assigned_tasks: True
-    task_id: True
+    task_id: False
   saving_options:
     output_folder: output
     with_date_subfolder: True

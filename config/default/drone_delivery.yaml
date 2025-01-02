@@ -29,14 +29,14 @@ decision_making: # Case 2
 
 agents:
   behavior_tree_xml: default_bt.xml 
-  quantity: 1
+  quantity: 10
   locations:
     x_min: 0
     x_max: 1400
     y_min: 0
     y_max: 1000
     non_overlap_radius: 0 
-  max_speed: 3.0  
+  max_speed: 1.5  
   max_accel: 0.5
   max_angular_speed: 0.25
   target_approaching_radius: 50
@@ -82,7 +82,7 @@ simulation:
     agent_work_done: True
     agent_assigned_task_id: True
     agent_path_to_assigned_tasks: True
-    task_id: True
+    task_id: False
   saving_options:
     output_folder: output
     with_date_subfolder: True
