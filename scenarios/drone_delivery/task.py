@@ -3,16 +3,19 @@ import random
 from modules.utils import config, generate_positions, generate_task_colors
 import os
 
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # 상위 폴더로 이동
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__)) 
 ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
-IMAGE_DIR = os.path.join(ASSETS_DIR, 'image')
-POINT_DIR = os.path.join(IMAGE_DIR, 'point')
+POINT_DIR = os.path.join(ASSETS_DIR, 'point')
 
 start_image_path = os.path.join(POINT_DIR, 'pickup_point.png')
 end_image_path = os.path.join(POINT_DIR, 'dropoff_point.png')
 
-start_image = pygame.image.load(start_image_path).convert_alpha()
-end_image = pygame.image.load(end_image_path).convert_alpha()
+start_image = pygame.image.load(start_image_path)
+end_image = pygame.image.load(end_image_path)
+
+# TODO: Error occurs when having `convert_alpha()`
+# start_image = pygame.image.load(start_image_path).convert_alpha()
+# end_image = pygame.image.load(end_image_path).convert_alpha()
 
 resized_start_image = pygame.transform.scale(start_image, (65, 65))
 resized_end_image = pygame.transform.scale(end_image, (80, 80))

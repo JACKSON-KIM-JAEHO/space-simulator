@@ -1,10 +1,21 @@
 # CHANGELOG.md
 
+## Version 1.2.15 (25-01-02)
+### New Scenario
+- **Drone Delivery**:
+  - Introduced a new "Drone Delivery" scenario created by Jaeho Kim. This scenario involves multiple robots performing pick-up and delivery tasks through dynamic task allocation, enhancing mission execution capabilities.
+
+  - **Modifications Required**
+    - **Agent Behavior Compatibility**: Current implementation of agent behaviors lacks compatibility with established plugins like GRAPE and CBBA. Specifically, tasks are not singular instances of pick-up and delivery; instead, they are defined in pairs as either pick-up or delivery, dictated by odd/even designations. This requires modification to align with standard task representation practices.
+    - **Decision-Making Plugin Limitations**: The current implementation of the decision-making plugin (`scenarios/drone_delivery/decision_making/simple.py`) is not fully developed and serves as a temporary solution tailored specifically to the current scenario. Further development is required to enhance its robustness and applicability to broader contexts.
+
+
+
 ## Version 1.2.14 (25-01-01)
 ### New Scenario
 - **Harbor Logistics**:
   - Updated for scenario-specific rendering (`agent.py`, `task.py`, `utils.py`, `env.py`).
-  - Implemented agent behavior for the harbor logistics scenario through new behavior tree configurations (`behavior_tree.py`, `default_bt.xml`).
+  - Implemented agent behavior for the harbor logistics scenario through new behavior tree configurations (`behavior_tree.py`, `default_bt.xml`). (created by Minji Jang)
 
 ### New Features
 - **Agent Refactoring (`base_agent.py`, (scenario_specific) `agent.py`)**:

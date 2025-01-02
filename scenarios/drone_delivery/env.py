@@ -1,308 +1,315 @@
 import pygame
-import asyncio
-import argparse
-import cProfile
-import importlib
 import os
-from modules.utils import pre_render_text, set_config, ResultSaver
+from modules.utils import pre_render_text, ResultSaver, ObjectToRender
+from scenarios.drone_delivery.task import generate_tasks
+from scenarios.drone_delivery.agent import generate_agents
 
-# Parse command line arguments
-parser = argparse.ArgumentParser(description='SPACE (Swarm Planning And Control Evalution) Simulator')
-parser.add_argument('--config', type=str, default='config.yaml', help='Path to the configuration file (default: --config=config.yaml)')
-args = parser.parse_args()
+class Env:
+    def __init__(self, config):
+        self.config = config
+        self.sampling_freq = config['simulation']['sampling_freq']
+        self.sampling_time = 1.0 / self.sampling_freq  # in seconds
+        self.max_simulation_time = config['simulation'].get('max_simulation_time', 0)
+        self.screen_height = config['simulation']['screen_height']
+        self.screen_width = config['simulation']['screen_width']
+        self.gif_recording_fps = config['simulation']['gif_recording_fps']
+        self.rendering_mode = config['simulation'].get('rendering_mode', "Screen")
+        self.speed_up_factor = config.get('simulation').get('speed_up_factor', 1)
+        self.rendering_options = config['simulation'].get('rendering_options', {})        
 
-# Load configuration
-set_config(args.config)
-from modules.utils import config  # Import the global config after setting it
 
-sampling_freq = config['simulation']['sampling_freq']
-sampling_time = 1.0 / sampling_freq  # in seconds
-target_arrive_threshold = config.get('agents', {}).get('target_arrive_threshold', 10)
-max_simulation_time = config.get('simulation').get('max_simulation_time', 0)
-screen_height = config['simulation']['screen_height']
-screen_width = config['simulation']['screen_width']
-gif_recording_fps = config['simulation']['gif_recording_fps']
-profiling_mode = config['simulation']['profiling_mode']
-rendering_mode = config.get('simulation').get('rendering_mode', "Screen")
-speed_up_factor = config.get('simulation').get('speed_up_factor', 1)
-rendering_options = config.get('simulation').get('rendering_options', {})
+        self.save_gif = config.get('simulation').get('saving_options').get('save_gif', False)
+        self.save_timewise_result_csv = config.get('simulation').get('saving_options').get('save_timewise_result_csv', False)
+        self.save_agentwise_result_csv = config.get('simulation').get('saving_options').get('save_agentwise_result_csv', False)
+        self.save_config_yaml = config.get('simulation').get('saving_options').get('save_config_yaml', False)
 
-save_gif = config.get('simulation').get('saving_options').get('save_gif', False)
-save_timewise_result_csv = config.get('simulation').get('saving_options').get('save_timewise_result_csv', False)
-save_agentwise_result_csv = config.get('simulation').get('saving_options').get('save_agentwise_result_csv', False)
-save_config_yaml = config.get('simulation').get('saving_options').get('save_config_yaml', False)
 
-# Dynamically import the decision-making module
-decision_making_module_path = config['decision_making']['plugin']
-module_path, _ = decision_making_module_path.rsplit('.', 1)
-decision_making_module = importlib.import_module(module_path)
+        # Dynamically import the decision-making module
+        # self.decision_making_module_path = config['decision_making']['plugin']
+        # module_path, _ = self.decision_making_module_path.rsplit('.', 1)
+        # self.decision_making_module = importlib.import_module(module_path)
 
-# Initialize pygame
-pygame.init()
-if rendering_mode == "Screen":
-    screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-else:
-    screen = None  # No screen initialization if rendering is disabled
+        
+        # Initialize rendering
+        pygame.init()        
+        if self.rendering_mode == "Screen":
+            self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.RESIZABLE)
+            
+            self.background_color = (224, 224, 224)
+            self.background_sea = None
+            self.background_port = None
 
-# screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-# background_color = (173, 255, 47)
-background_color = (224, 224, 224)
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
-IMAGE_DIR = os.path.join(ASSETS_DIR, 'image')
-BACKGROUND_DIR = os.path.join(IMAGE_DIR, 'background')
-POINT_DIR = os.path.join(IMAGE_DIR, 'point')
+            # Set logo and title
+            logo_image_path = 'assets/logo.jpg'  # Change to the path of your logo image
+            logo = pygame.image.load(logo_image_path)
+            pygame.display.set_icon(logo)
+            pygame.display.set_caption('SPACE(Swarm Planning And Control Evaluation) Simulator')  # Change to your desired game title
 
-background_point_image_path = os.path.join(BACKGROUND_DIR, 'city_view.png')
-final_image_path = os.path.join(POINT_DIR, 'final_point.png')
+        else:
+            self.screen = None
 
-background_image = pygame.image.load(background_point_image_path).convert_alpha()
-background_image = pygame.transform.scale(background_image, (1400, 1400))
-final_point_image = pygame.image.load(final_image_path).convert_alpha()
-final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
+        # Initialize the background and environment
+        self.set_background()
 
-# Set logo and title
-logo_image_path = 'assets/logo.jpg'  # Change to the path of your logo image
-logo = pygame.image.load(logo_image_path)
-pygame.display.set_icon(logo)
-pygame.display.set_caption('SPACE(Swarm Planning And Control Evaluation) Simulator')  # Change to your desired game title
+        # Initialize agents and tasks
+        self.tasks = generate_tasks()
+        max_task_count = config['tasks']['quantity']  # config.yaml에 정의된 task 수
+        self.agents = generate_agents(self.tasks)
 
-# Initialize tasks
-from modules.task import generate_tasks
-tasks = generate_tasks()
+        # Pre-rendered text
+        self.mission_completed_text = pre_render_text("MISSION COMPLETED", 72, (0, 0, 0))
 
-# Initialize agents with behavior trees, giving them the information of current tasks
-from modules.agent import generate_agents
-agents = generate_agents(tasks)
+        # Dynamic task generation variables
+        self.dynamic_task_generation = config['tasks'].get('dynamic_task_generation', {})
+        self.generation_enabled = self.dynamic_task_generation.get('enabled', False)
+        self.generation_interval = self.dynamic_task_generation.get('interval_seconds', 10)
+        self.max_generations = self.dynamic_task_generation.get('max_generations', 5)
+        self.tasks_per_generation = self.dynamic_task_generation.get('tasks_per_generation', 5)
+        
+        
 
-# Pre-rendered text for performance improvement
-mission_completed_text = pre_render_text("MISSION COMPLETED", 72, (0, 0, 0))
+        # Initialize data recording
+        self.data_records = []
+        self.result_saver = ResultSaver(config)
 
-# Dynamic task generation parameters
-dynamic_task_generation = config['tasks'].get('dynamic_task_generation', {})
-generation_enabled = dynamic_task_generation.get('enabled', False)
-generation_interval = dynamic_task_generation.get('interval_seconds', 10)
-max_generations = dynamic_task_generation.get('max_generations', 5)
-tasks_per_generation = dynamic_task_generation.get('tasks_per_generation', 5)
+        # Initialization        
+        self.running = True
+        self.clock = pygame.time.Clock()
+        self.game_paused = False
+        self.mission_completed = False        
 
-# Initialize data recording
-data_records = []
-result_saver = ResultSaver(args.config)
+        # Initialize simulation time           
+        self.simulation_time = 0.0
+        self.last_print_time = 0.0   # Variable to track the last time tasks_left was printed
 
-# Main game loop
-async def game_loop():
-    running = True
-    clock = pygame.time.Clock()
-    game_paused = False
-    mission_completed = False
+        # Initialize dynamic task generation time
+        self.generation_count = 0
+        self.last_generation_time = 0.0     
 
-    # Initialize simulation time
-    simulation_time = 0.0
-    last_print_time = 0.0   # Variable to track the last time tasks_left was printed
+        # Recording variables
+        self.recording = False
+        self.frames = []    
+        if self.save_gif and self.rendering_mode == "Screen":
+            self.recording = True
+            self.frames = [] # Clear any existing frames
+            self.last_frame_time = self.simulation_time
+            print("Recording started...") 
 
-    # Initialize dynamic task generation time
-    generation_count = 0
-    last_generation_time = 0.0
 
-    # Recording variables
-    recording = False
-    frames = []    
-    if save_gif and rendering_mode == "Screen":
-        recording = True
-        frames = [] # Clear any existing frames
-        last_frame_time = simulation_time
-        print("Recording started...") 
+    def set_background(self):
+        CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+        ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
+        BACKGROUND_DIR = os.path.join(ASSETS_DIR, 'background')
+        POINT_DIR = os.path.join(ASSETS_DIR, 'point')
 
-    while running:
-        # Draw the background image first
-        screen.blit(background_image, (0, 0))  # Draw the background image at (0, 0)
-        screen.blit(final_point_image, (700, 500))
+        background_point_image_path = os.path.join(BACKGROUND_DIR, 'city_view.png')
+        final_image_path = os.path.join(POINT_DIR, 'final_point.png')
+
+        background_image = pygame.image.load(background_point_image_path).convert_alpha()
+        self.background_image = pygame.transform.scale(background_image, (1400, 1400))
+        final_point_image = pygame.image.load(final_image_path).convert_alpha()
+        self.final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
+
+
+
+    async def step(self):
+        # Main simulation loop logic
+        for agent in self.agents:
+            # agent.assign_nearest_task() # TODO: 이거는 tree 안으로 들어가야함. 
+            await agent.run_tree()
+            agent.update()
+
+        # Status retrieval
+        self.simulation_time += self.sampling_time
+        self.tasks_left = sum(1 for task in self.tasks if not task.completed)
+        if self.tasks_left == 0:
+            self.mission_completed = not self.generation_enabled or self.generation_count == self.max_generations
+
+        # Dynamic task generation
+        if self.generation_enabled:
+            self.generate_tasks_if_needed()
+            
+        # NOTE: 아래는 재호님 구현 한 부분. Refactoring 필요
+        # tasks_left = sum(1 for task in tasks if not task.completed)
+        # if tasks_left == 0:
+        #     all_agents_gathered = all(
+        #         agent.position.distance_to(pygame.Vector2(700, 500)) < target_arrive_threshold
+        #         for agent in agents
+        # )
+        #     if all_agents_gathered:
+        #         mission_completed = not generation_enabled or generation_count == max_generations
+
+
+
+        # Stop if maximum simulation time reached
+        if self.max_simulation_time > 0 and self.simulation_time > self.max_simulation_time:
+            self.running = False
+
+    def render(self):
+        if self.rendering_mode == "Screen" and self.screen:
+            self.screen.blit(self.background_image, (0, 0))
+            self.screen.blit(self.final_point_image, (670, 460))
+
+            # Draw tasks with task_id displayed
+            for idx, task in enumerate(self.tasks):
+                if idx % 2 == 0:
+                    task.draw(self.screen)
+                else:
+                    task.draw(self.screen)
+            
+            for idx in range(0, len(self.tasks), 2):
+                start_task = self.tasks[idx]
+                end_task = self.tasks[idx + 1]
+                if not end_task.completed:
+                    pygame.draw.line(self.screen, start_task.color, start_task.position, end_task.position, width=2)
+                start_task.draw(self.screen)
+                end_task.draw(self.screen)
+                
+
+            # Draw agents network topology
+            if self.rendering_options.get('agent_communication_topology'):
+                for agent in self.agents:
+                    agent.draw_communication_topology(self.screen, self.agents)
+
+            # Draw agents
+            for agent in self.agents:                    
+                if self.rendering_options.get('agent_path_to_assigned_tasks'): # Draw each agent's path to its assigned tasks
+                    agent.draw_path_to_assigned_tasks(self.screen)                    
+                if self.rendering_options.get('agent_tail'): # Draw each agent's trajectory tail
+                    agent.draw_tail(self.screen)
+                    # TODO: 아래는 민지님 코드
+                    # agent.draw_path_to_assigned_tasks(screen) 
+                    # agent.draw_path_to_destination(screen)                      
+                if self.rendering_options.get('agent_id'): # Draw each agent's ID
+                    agent.draw_agent_id(self.screen)
+                if self.rendering_options.get('agent_assigned_task_id'): # Draw each agent's assigned task ID
+                    agent.draw_assigned_task_id(self.screen)
+                if self.rendering_options.get('agent_work_done'): # Draw each agent's assigned task ID
+                    agent.draw_work_done(self.screen)
+                if self.rendering_options.get('agent_situation_awareness_circle'): # Draw each agent's situation awareness radius circle    
+                    agent.draw_situation_awareness_circle(self.screen)
+                agent.draw(self.screen)
+
+            # Draw tasks with task_id displayed
+            for task in self.tasks:
+                task.draw(self.screen)
+                if self.rendering_options.get('task_id'): # Draw each task's ID
+                    task.draw_task_id(self.screen)
+
+            # Display task quantity and elapsed simulation time                
+            task_time_text = pre_render_text(f'Tasks left: {self.tasks_left}; Time: {self.simulation_time:.2f}s', 36, (0, 0, 0))
+            self.screen.blit(task_time_text, (self.screen_width - 350, 20))
+
+
+            # # Call draw_decision_making_status from the imported module if it exists
+            # if hasattr(decision_making_module, 'draw_decision_making_status'):
+            #     decision_making_module.draw_decision_making_status(screen, agent)  
+
+            # Check if all tasks are completed
+            if self.mission_completed:
+                text_rect = self.mission_completed_text.get_rect(center=(self.screen_width // 2, self.screen_height // 2))
+                self.screen.blit(self.mission_completed_text, text_rect)
+
+            pygame.display.flip()
+            self.clock.tick(self.sampling_freq*self.speed_up_factor)
+
+
+
+
+        elif self.rendering_mode == "Terminal":
+            print(f"Time: {self.simulation_time:.2f}, Tasks left: {len(self.tasks)}")
+            if self.simulation_time - self.last_print_time > 0.5:                    
+                self.last_print_time = self.simulation_time
+                
+            if self.mission_completed:                    
+                print(f'MISSION COMPLETED')
+                self.running = False            
+
+        else: # if rendering_mode is None
+            if self.mission_completed:
+                print(f'[{self.simulation_time:.2f}] MISSION COMPLETED')
+                self.running = False                
+
+
+    def close(self):
+        pygame.quit()
+        self.save_results()
+
+    def save_results(self):
+        # Save gif
+        if self.save_gif and self.rendering_mode == "Screen":        
+            self.recording = False
+            print("Recording stopped.")
+            self.result_saver.save_gif(self.frames)          
+     
+
+        # Save time series data
+        if self.save_timewise_result_csv:        
+            csv_file_path = self.result_saver.save_to_csv("timewise", self.data_records, ['time', 'agents_total_distance_moved', 'agents_total_task_amount_done', 'remaining_tasks', 'tasks_total_amount_left'])          
+            self.result_saver.plot_timewise_result(csv_file_path)
+        
+        # Save agent-wise data            
+        if self.save_agentwise_result_csv:        
+            variables_to_save = ['agent_id', 'task_amount_done', 'distance_moved']
+            agentwise_results = self.result_saver.get_agentwise_results(self.agents, variables_to_save)                        
+            csv_file_path = self.result_saver.save_to_csv('agentwise', agentwise_results, variables_to_save)
+            
+            self.result_saver.plot_boxplot(csv_file_path, variables_to_save[1:])
+
+        # Save yaml: TODO - To debug
+        # if self.save_config_yaml:                
+            # self.result_saver.save_config_yaml()           
+
+
+    def generate_tasks_if_needed(self):
+        """Generate new tasks dynamically based on configuration."""
+        if self.generation_count < self.max_generations:
+            if self.simulation_time - self.last_generation_time >= self.generation_interval:
+                new_task_id_start = len(self.tasks)
+                new_tasks = generate_tasks(task_quantity=self.tasks_per_generation, task_id_start=new_task_id_start)
+                self.tasks.extend(new_tasks)
+                self.last_generation_time = self.simulation_time
+                self.generation_count += 1
+                if self.rendering_mode != "None":
+                    print(f"[{self.simulation_time:.2f}] Added {self.tasks_per_generation} new tasks: Generation {self.generation_count}.")
+
+    def handle_keyboard_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                    running = False
+                    self.running = False
                 elif event.key == pygame.K_p:
-                    game_paused = not game_paused
+                    self.game_paused = not self.game_paused
                 elif event.key == pygame.K_r:
-                    if not recording:
-                        recording = True
-                        frames = [] # Clear any existing frames
-                        last_frame_time = simulation_time
+                    if not self.recording:
+                        self.recording = True
+                        self.frames = [] # Clear any existing frames
+                        self.last_frame_time = self.simulation_time
                         print("Recording started...") 
                     else:
-                        recording = False
+                        self.recording = False
                         print("Recording stopped.")
-                        result_saver.save_gif(frames)            
-
-        if max_simulation_time > 0 and simulation_time > max_simulation_time:
-            running = False
-
-        if not game_paused and not mission_completed:
-            # Run behavior trees for each agent without rendering
-            for agent in agents:
-                await agent.run_tree()    
-                agent.update()
-
-            # Status retrieval
-            simulation_time += sampling_time
-            tasks_left = sum(1 for task in tasks if not task.completed)
-            if tasks_left == 0:
-                all_agents_gathered = all(
-                    agent.position.distance_to(pygame.Vector2(700, 500)) < target_arrive_threshold
-                    for agent in agents
-            )
-                if all_agents_gathered:
-                    mission_completed = not generation_enabled or generation_count == max_generations
-
-
-            # Dynamic task generation
-            if generation_enabled and generation_count < max_generations:                
-                if simulation_time - last_generation_time >= generation_interval:
-                    new_task_id_start = len(tasks)
-                    new_tasks = generate_tasks(task_quantity=tasks_per_generation, task_id_start = new_task_id_start)
-                    tasks.extend(new_tasks)
-                    last_generation_time = simulation_time
-                    generation_count += 1
-                    if rendering_mode != "None":
-                        print(f"[{simulation_time:.2f}] Added {tasks_per_generation} new tasks: Generation {generation_count}.")
-
-            # Record data if time recording mode is enabled
-            if save_timewise_result_csv:
-                agents_total_distance_moved = sum(agent.distance_moved for agent in agents)
-                agents_total_task_amount_done = sum(agent.task_amount_done for agent in agents)
-                remaining_tasks = len([task for task in tasks if not task.completed])
-                tasks_total_amount_left = sum(task.amount for task in tasks)
-                
-                data_records.append([
-                    simulation_time, 
-                    agents_total_distance_moved,
-                    agents_total_task_amount_done,
-                    remaining_tasks,
-                    tasks_total_amount_left
-                ])
-
-            # Rendering
-            if rendering_mode == "Screen":
-                screen.blit(background_image, (0, 0))
-                screen.blit(final_point_image, (670, 460))
-
-                # Draw tasks with task_id displayed
-                for idx, task in enumerate(tasks):
-                    if idx % 2 == 0:
-                        task.draw(screen)
-                    else:
-                        task.draw(screen)
-                
-                for idx in range(0, len(tasks), 2):
-                    start_task = tasks[idx]
-                    end_task = tasks[idx + 1]
-                    if not end_task.completed:
-                        pygame.draw.line(screen, start_task.color, start_task.position, end_task.position, width=2)
-                    start_task.draw(screen)
-                    end_task.draw(screen)
-
-
-
-                # Draw agents network topology
-                if rendering_options.get('agent_communication_topology'):
-                    for agent in agents:
-                        agent.draw_communication_topology(screen, agents)
-
-                # Draw agents
-                for agent in agents:                    
-                    if rendering_options.get('agent_path_to_assigned_tasks'): # Draw each agent's path to its assigned tasks
-                        agent.draw_path_to_assigned_tasks(screen)                    
-                    if rendering_options.get('agent_tail'): # Draw each agent's trajectory tail
-                        agent.draw_tail(screen)
-                    if rendering_options.get('agent_id'): # Draw each agent's ID
-                        agent.draw_agent_id(screen)
-                    if rendering_options.get('agent_assigned_task_id'): # Draw each agent's assigned task ID
-                        agent.draw_assigned_task_id(screen)
-                    if rendering_options.get('agent_work_done'): # Draw each agent's assigned task ID
-                        agent.draw_work_done(screen)
-                    if rendering_options.get('agent_situation_awareness_circle'): # Draw each agent's situation awareness radius circle    
-                        agent.draw_situation_awareness_circle(screen)
-                    agent.draw(screen)
-
-                # Draw tasks with task_id displayed
-                for task in tasks:
-                    task.draw(screen)
-                    if rendering_options.get('task_id'): # Draw each task's ID
-                        task.draw_task_id(screen)
-                        
-
-                # Display task quantity and elapsed simulation time                
-                task_time_text = pre_render_text(f'Tasks left: {tasks_left}; Time: {simulation_time:.2f}s', 36, (0, 0, 0))
-                screen.blit(task_time_text, (screen_width - 350, 20))
-
-                # Call draw_decision_making_status from the imported module if it exists
-                if hasattr(decision_making_module, 'draw_decision_making_status'):
-                    decision_making_module.draw_decision_making_status(screen, agent)                
-
-                # Check if all tasks are completed
-                if mission_completed:
-                    text_rect = mission_completed_text.get_rect(center=(screen_width // 2, screen_height // 2))
-                    screen.blit(mission_completed_text, text_rect)
-
-
-                pygame.display.flip()
-                clock.tick(sampling_freq*speed_up_factor)
-
-                # Capture frame for recording
-                if recording:
-                    if simulation_time - last_frame_time > 1.0/gif_recording_fps: # Capture frame if 0.5 seconds elapsed
-                        frame = pygame.surfarray.array3d(screen)
-                        frames.append(frame)            
-                        last_frame_time = simulation_time                
-
-            elif rendering_mode == "Terminal": 
-                print(f'[{simulation_time:.2f}] Tasks left: {tasks_left}')
-                if simulation_time - last_print_time > 0.5:                    
-                    last_print_time = simulation_time
-                    
-                if mission_completed:                    
-                    print(f'MISSION COMPLETED')
-                    running = False
-            else: # if rendering_mode is None
-                if mission_completed:
-                    print(f'[{simulation_time:.2f}] MISSION COMPLETED')
-                    running = False
-
-
-
-    pygame.quit()
-
-    # Save gif
-    if save_gif and rendering_mode == "Screen":        
-        recording = False
-        print("Recording stopped.")
-        result_saver.save_gif(frames)           
-
-    # Save time series data
-    if save_timewise_result_csv:        
-        csv_file_path = result_saver.save_to_csv("timewise", data_records, ['time', 'agents_total_distance_moved', 'agents_total_task_amount_done', 'remaining_tasks', 'tasks_total_amount_left'])          
-        result_saver.plot_timewise_result(csv_file_path)
+                        self.result_saver.save_gif(self.frames) 
     
-    # Save agent-wise data            
-    if save_agentwise_result_csv:        
-        variables_to_save = ['agent_id', 'task_amount_done', 'distance_moved']
-        agentwise_results = result_saver.get_agentwise_results(agents, variables_to_save)                        
-        csv_file_path = result_saver.save_to_csv('agentwise', agentwise_results, variables_to_save)
+    def record_timewise_result(self):
+        agents_total_distance_moved = sum(agent.distance_moved for agent in self.agents)
+        agents_total_task_amount_done = sum(agent.task_amount_done for agent in self.agents)
+        remaining_tasks = len([task for task in self.tasks if not task.completed])
+        tasks_total_amount_left = sum(task.amount for task in self.tasks)
         
-        result_saver.plot_boxplot(csv_file_path, variables_to_save[1:])
+        self.data_records.append([
+            self.simulation_time, 
+            agents_total_distance_moved,
+            agents_total_task_amount_done,
+            remaining_tasks,
+            tasks_total_amount_left
+        ])        
 
-    # Save yaml 
-    if save_config_yaml:                
-        result_saver.save_config_yaml()    
-
-def main():
-    asyncio.run(game_loop())
-
-# Run the game
-if __name__ == "__main__":    
-    if profiling_mode:
-        cProfile.run('main()', sort='cumulative')
-    else:
-        main()
+    def record_screen_frame(self):
+        # Capture frame for recording
+        if self.simulation_time - self.last_frame_time > 1.0/self.gif_recording_fps: # Capture frame if 0.5 seconds elapsed
+            frame = pygame.surfarray.array3d(self.screen)
+            self.frames.append(frame)            
+            self.last_frame_time = self.simulation_time                    

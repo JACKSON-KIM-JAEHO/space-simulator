@@ -22,6 +22,8 @@ class BehaviorTreeList:
         'GatheringNode',
     ]
 
+    CONDITION_NODES = [
+    ]
 
 # Status enumeration for behavior tree nodes
 class Status(Enum):
@@ -88,10 +90,13 @@ sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
 agent_max_random_movement_duration = config.get('agents', {}).get('random_exploration_duration', None)
 
-decision_making_module_path = config['decision_making']['plugin']
-module_path, class_name = decision_making_module_path.rsplit('.', 1)
-decision_making_module = importlib.import_module(module_path)
-decision_making_class = getattr(decision_making_module, class_name)
+# TODO: 나중에 변경 필요
+# decision_making_module_path = config['decision_making']['plugin']
+# module_path, class_name = decision_making_module_path.rsplit('.', 1)
+# decision_making_module = importlib.import_module(module_path)
+# decision_making_class = getattr(decision_making_module, class_name)
+from scenarios.drone_delivery.decision_making.simple import MyDecisionMakingClass as decision_making_class
+
 
 # Local Sensing node
 class LocalSensingNode(SyncAction):
@@ -108,7 +113,7 @@ class LocalSensingNode(SyncAction):
 class DecisionMakingNode(SyncAction):
     def __init__(self, name, agent):
         super().__init__(name, self._decide)
-        self.decision_maker = MyDecisionMakingClass(agent)
+        self.decision_maker = decision_making_class(agent)
 
     def _decide(self, agent, blackboard):
         assigned_task_id = self.decision_maker.decide(blackboard)
