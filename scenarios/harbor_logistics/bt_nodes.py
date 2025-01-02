@@ -1,98 +1,35 @@
 from enum import Enum
 import math
-import random
+from modules.base_bt_nodes import BTNodeList, Status, Node, Sequence, Fallback, SyncAction, LocalSensingNode, DecisionMakingNode
+
+
 # BT Node List
-class BehaviorTreeList:
-    CONTROL_NODES = [        
-        'Sequence',
-        'Fallback'
-    ]
+CUSTOM_ACTION_NODES = [
+    'GoToShip',
+    'PickItem',
+    'GoToDestination',
+    'PlaceItem'
+]
 
-    ACTION_NODES = [
-        'LocalSensingNode',
-        'GoToShip',
-        'PickItem',
-        'GoToDestination',
-        'PlaceItem'
-    ]
+CUSTOM_CONDITION_NODES = [
+    'IsFinishedTask',
+    'IsHoldingItem',
+    'IsArrivedAtShip',
+    'IsArrivedAtDestination'
+]
 
-    CONDITION_NODES = [
-        'IsFinishedTask',
-        'IsHoldingItem',
-        'IsArrivedAtShip',
-        'IsArrivedAtDestination'
-    ]
+BTNodeList.ACTION_NODES.extend(CUSTOM_ACTION_NODES)
+BTNodeList.CONDITION_NODES.extend(CUSTOM_CONDITION_NODES)
 
 
-# Status enumeration for behavior tree nodes
-class Status(Enum):
-    SUCCESS = 1
-    FAILURE = 2
-    RUNNING = 3
-
-# Base class for all behavior tree nodes
-class Node:
-    def __init__(self, name):
-        self.name = name
-
-    async def run(self, agent, blackboard):
-        raise NotImplementedError
-
-# Sequence node: Runs child nodes in sequence until one fails
-class Sequence(Node):
-    def __init__(self, name, children):
-        super().__init__(name)
-        self.children = children
-
-    async def run(self, agent, blackboard):
-        for child in self.children:
-            status = await child.run(agent, blackboard)
-            if status == Status.RUNNING:
-                continue
-            if status != Status.SUCCESS:
-                return status
-        return Status.SUCCESS
-
-# Fallback node: Runs child nodes in sequence until one succeeds
-class Fallback(Node):
-    def __init__(self, name, children):
-        super().__init__(name)
-        self.children = children
-
-    async def run(self, agent, blackboard):
-        for child in self.children:
-            status = await child.run(agent, blackboard)
-            if status == Status.RUNNING:
-                continue
-            if status != Status.FAILURE:
-                return status
-        return Status.FAILURE
-
-# Synchronous action node
-class SyncAction(Node):
-    def __init__(self, name, action):
-        super().__init__(name)
-        self.action = action
-
-    async def run(self, agent, blackboard):
-        result = self.action(agent, blackboard)
-        blackboard[self.name] = result
-        return result
-
-# Load additional configuration and import decision-making class dynamically
-import importlib
+# Scenario-specific Action/Condition Nodes
 from modules.utils import config
-from plugins.my_decision_making_plugin import *
 target_arrive_threshold = config['tasks']['threshold_done_by_arrival']
 task_locations = config['tasks']['locations']
 sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
 agent_max_random_movement_duration = config.get('agents', {}).get('random_exploration_duration', None)
 
-# decision_making_module_path = config['decision_making']['plugin']
-# module_path, class_name = decision_making_module_path.rsplit('.', 1)
-# decision_making_module = importlib.import_module(module_path)
-# decision_making_class = getattr(decision_making_module, class_name)
 
 # Condition nodes
 class IsFinishedTask(SyncAction):
@@ -146,17 +83,6 @@ class IsArrivedAtDestination(SyncAction):
 
 
 # Action nodes
-# Local Sensing node
-class LocalSensingNode(SyncAction):
-    def __init__(self, name, agent):
-        super().__init__(name, self._local_sensing)
-
-    def _local_sensing(self, agent, blackboard):        
-        blackboard['local_tasks_info'] = agent.get_tasks_nearby(with_completed_task = False)
-        blackboard['local_agents_info'] = agent.local_message_receive()
-
-        return Status.SUCCESS
-
 class GoToShip(SyncAction):
     def __init__(self, name, agent):
         super().__init__(name, self._move)

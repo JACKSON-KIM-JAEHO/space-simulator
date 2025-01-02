@@ -2,7 +2,7 @@ from enum import Enum
 import math
 import random
 # BT Node List
-class BehaviorTreeList:
+class BTNodeList:
     CONTROL_NODES = [        
         'Sequence',
         'Fallback'

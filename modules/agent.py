@@ -66,10 +66,10 @@ class Agent:
         for child in xml_node:
             children.append(self._parse_xml_to_bt(child))
 
-        if node_type in BehaviorTreeList.CONTROL_NODES:
+        if node_type in BTNodeList.CONTROL_NODES:
             control_class = globals()[node_type]  # Control class should be globally available
             return control_class(node_type, children=children)
-        elif node_type in BehaviorTreeList.ACTION_NODES:
+        elif node_type in BTNodeList.ACTION_NODES:
             action_class = globals()[node_type]  # Action class should be globally available
             return action_class(node_type, self)
         elif node_type == "BehaviorTree": # Root
@@ -78,7 +78,7 @@ class Agent:
             raise ValueError(f"[ERROR] Unknown behavior node type: {node_type}")    
 
     def _reset_bt_action_node_status(self):
-        action_nodes = BehaviorTreeList.ACTION_NODES
+        action_nodes = BTNodeList.ACTION_NODES
         self.blackboard = {key: None if key in action_nodes else value for key, value in self.blackboard.items()}
 
 

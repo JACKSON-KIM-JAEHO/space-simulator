@@ -9,6 +9,10 @@
     - **Agent Behavior Compatibility**: Current implementation of agent behaviors lacks compatibility with established plugins like GRAPE and CBBA. Specifically, tasks are not singular instances of pick-up and delivery; instead, they are defined in pairs as either pick-up or delivery, dictated by odd/even designations. This requires modification to align with standard task representation practices.
     - **Decision-Making Plugin Limitations**: The current implementation of the decision-making plugin (`scenarios/drone_delivery/decision_making/simple.py`) is not fully developed and serves as a temporary solution tailored specifically to the current scenario. Further development is required to enhance its robustness and applicability to broader contexts.
 
+### Refactorings
+- **Behavior Tree File Renaming and Restructuring**:
+  - Separated the original `behavior_tree.py` implementation into `base_behavior_tree.py` and scenario-specific files for better organization and clarity. Renamed these files to `base_bt_nodes.py` for the base behavior tree nodes and `bt_nodes.py` for each scenario-specific implementation to enhance clarity and explicitness in naming. 
+
 
 
 ## Version 1.2.14 (25-01-01)

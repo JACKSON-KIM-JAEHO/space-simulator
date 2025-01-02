@@ -2,7 +2,7 @@ import pygame
 import math
 from modules.utils import config, parse_behavior_tree
 import importlib
-bt_module = importlib.import_module(config.get('scenario').get('environment') + ".behavior_tree")
+bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
 
 # Load agent configuration
 agent_max_speed = config['agents']['max_speed']
@@ -57,12 +57,12 @@ class BaseAgent:
         for child in xml_node:
             children.append(self._parse_xml_to_bt(child))
 
-        BehaviorTreeList = getattr(bt_module, "BehaviorTreeList")        
-        if node_type in BehaviorTreeList.CONTROL_NODES:
+        BTNodeList = getattr(bt_module, "BTNodeList")        
+        if node_type in BTNodeList.CONTROL_NODES:
             # control_class = globals()[node_type]  # Control class should be globally available
             control_class = getattr(bt_module, node_type)
             return control_class(node_type, children=children)
-        elif node_type in BehaviorTreeList.ACTION_NODES + BehaviorTreeList.CONDITION_NODES:
+        elif node_type in BTNodeList.ACTION_NODES + BTNodeList.CONDITION_NODES:
             # action_class = globals()[node_type]  # Action class should be globally available
             action_class = getattr(bt_module, node_type)
             return action_class(node_type, self)
@@ -72,8 +72,8 @@ class BaseAgent:
             raise ValueError(f"[ERROR] Unknown behavior node type: {node_type}")    
 
     def _reset_bt_action_node_status(self):
-        BehaviorTreeList = getattr(bt_module, "BehaviorTreeList")        
-        action_nodes = BehaviorTreeList.ACTION_NODES
+        BTNodeList = getattr(bt_module, "BTNodeList")        
+        action_nodes = BTNodeList.ACTION_NODES
         self.blackboard = {key: None if key in action_nodes else value for key, value in self.blackboard.items()}
 
 
