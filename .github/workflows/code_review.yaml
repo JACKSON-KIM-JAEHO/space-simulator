@@ -24,7 +24,7 @@ jobs:
 
           # Optional configurations
           APPROVE_REVIEWS: true
-          MAX_COMMENTS: 0 # 0 to disable
+          MAX_COMMENTS: 20 # 0 to disable
           PROJECT_CONTEXT: "This is a Python project to develop a simulator for multi-robot decision-making research."
           CONTEXT_FILES: "package.json,README.md"
           EXCLUDE_PATTERNS: "**/*.lock,**/*.json,**/*.md,**/*.yaml,**/*.png,**/*.xml"
