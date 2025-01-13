@@ -2,8 +2,9 @@ import pygame
 import math
 import os
 from modules.utils import config, generate_positions 
-from modules.base_agent import BaseAgent
-from scenarios.simple.task import task_colors
+from modules.base_agent import BaseAgent, bt_module
+from scenarios.pa_bt_test.task import task_colors
+from modules.base_bt_nodes import Status, BTNodeList, SyncCondition
 
 # Load agent configuration (Scenario Specific)
 work_rate = config['agents']['work_rate']
@@ -34,6 +35,21 @@ class Agent(BaseAgent):
     def update_color(self):        
         self.color = task_colors.get(self.assigned_task_id, (20, 20, 20))  # Default to Dark Grey if no task is assigned
 
+
+    def find_failed_conditions(self):
+        """
+        Find failed conditions from the agent's behavior tree blackboard.
+        """
+        failed_conditions = []
+        for node_name, info in self.blackboard.items():
+            # info가 딕셔너리인지 확인
+            if isinstance(info, dict):
+                # 키가 없을 때 기본값을 반환하도록 get() 메서드 사용
+                status = info.get('status', None)
+                is_expanded = info.get('is_expanded', None)  # 기본값은 True로 설정
+                if status == Status.FAILURE and is_expanded == False:
+                    failed_conditions.append(node_name)
+        return failed_conditions
 
 
 def generate_agents(tasks_info):

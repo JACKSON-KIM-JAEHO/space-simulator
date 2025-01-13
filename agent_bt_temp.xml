@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Sequence><LocalSensingNode /><Fallback><IsMissionCompleted /><Sequence><Fallback><IsTaskNearby /><Sequence><Fallback><IsTaskAssigned /><Sequence><Fallback><IsTaskSensored /><Sequence><Exploration /></Sequence></Fallback><AssignTask /></Sequence></Fallback><MoveToTask /></Sequence></Fallback><CompleteTask /></Sequence></Fallback></Sequence>
