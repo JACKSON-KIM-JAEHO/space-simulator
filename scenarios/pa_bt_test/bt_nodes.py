@@ -54,7 +54,6 @@ class CompleteTask(SyncAction):
             assigned_task.reduce_amount(agent.work_rate)
             agent.update_task_amount_done(agent.work_rate)
             if not assigned_task.completed:
-                print(f"Task ID {assigned_task.task_id} is still in progress.")
                 return Status.RUNNING
 
 

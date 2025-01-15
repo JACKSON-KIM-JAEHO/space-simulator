@@ -1,7 +1,10 @@
 # ppa_bt_expansion.py
-from modules.base_bt_nodes import * # 확인 후 수정
+from modules.base_bt_nodes import config, Fallback, Sequence, BTNodeList
+from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import csv
+import os
+import datetime
 import importlib
 bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
 
@@ -29,7 +32,15 @@ def expand_behavior_tree(tree, failed_condition, ppa_library):
         print(f"[DEBUG] Expanding BT for failed condition: {failed_condition}")
         ppa_bt = generate_ppa_bt(failed_condition, ppa_fail_entry)
         tree = replace_node_with_ppa_bt(tree, failed_condition, ppa_bt)
-        save_tree_as_xml(tree, "agent_bt_temp.xml")
+
+        # Set the output directory
+        output_dir = "/home/solarbean23/Desktop/space_dev/space-simulator/scenarios/pa_bt_test/output/xml_output"
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_name = f"agent_bt_temp_{timestamp}.xml"
+        file_path = os.path.join(output_dir, file_name)
+
+        # Save the updated BT as an XML file
+        save_tree_as_xml(tree, file_path)
     return tree
 
 
@@ -40,21 +51,23 @@ def generate_ppa_bt(post_condition, ppa_fail_entry):
     # Create Fallback Node
     fallback = Fallback("Fallback", children=[])
 
-    # Add Pre-conditions as Sequence Node
-    sequence = Sequence("Sequence", [])
-    for pre_condition in ppa_fail_entry["pre_conditions"]:
-        if pre_condition:
+    # Check if Pre-conditions exist
+    if ppa_fail_entry["pre_conditions"]:
+        # Add Pre-conditions as Sequence Node
+        sequence = Sequence("Sequence", [])
+        for pre_condition in ppa_fail_entry["pre_conditions"]:
             condition_class = getattr(bt_module, pre_condition)
             condition_node = condition_class(pre_condition, None)
             sequence.children.append(condition_node)
 
-    # Add Action Node
-    action_class = getattr(bt_module, ppa_fail_entry["action"])
-    action_node = action_class(ppa_fail_entry["action"], None)
-    sequence.children.append(action_node)
-
-    # Add to Fallback Node
-    # fallback.children.append(sequence)
+        # Add Action Node
+        action_class = getattr(bt_module, ppa_fail_entry["action"])
+        action_node = action_class(ppa_fail_entry["action"], None)
+        sequence.children.append(action_node)
+    else:
+        # If no Pre-conditions, directly use Action Node
+        action_class = getattr(bt_module, ppa_fail_entry["action"])
+        sequence = action_class(ppa_fail_entry["action"], None)
 
     # Add Post-condition Node to Fallback
     condition_class = getattr(bt_module, post_condition)
@@ -81,33 +94,95 @@ def replace_node_with_ppa_bt(tree, failed_condition, ppa_bt):
 
     return tree
 
+
 # Utility: SaveTreeAsXML Function
 def save_tree_as_xml(tree, file_path):
-    def node_to_xml(node, visited=None):
-        if visited is None:
-            visited = set()
+    action_nodes = set()
+    condition_nodes = set()
+    collect_node_definitions(tree, action_nodes, condition_nodes)
 
-        # Prevent circular reference
-        if id(node) in visited:
-            print(f"[WARNING] Circular reference detected for node: {node.name}")
-            return None
+    # Create the root element for Groot2
+    root = ET.Element("root", {"BTCPP_format": "4"})
+    behavior_tree = ET.SubElement(root, "BehaviorTree", {"ID": "main_tree"})
+    behavior_tree.append(node_to_xml(tree))
 
-        visited.add(id(node))
+    # Add TreeNodesModel
+    tree_nodes_model = ET.SubElement(root, "TreeNodesModel")
+    for action in sorted(action_nodes):
+        ET.SubElement(tree_nodes_model, "Action", {"ID": action})
+    for condition in sorted(condition_nodes):
+        ET.SubElement(tree_nodes_model, "Condition", {"ID": condition, "editable": "true"})
 
-        # Create XML Element
-        element = ET.Element(node.name)
-        print(f"[DEBUG] Processing node: {node.name}")
-        if hasattr(node, "children"):
-            for child in node.children:
-                child_xml = node_to_xml(child, visited)
-                if child_xml is not None:
-                    element.append(child_xml)
-        return element
+    # Generate pretty XML string
+    xml_str = ET.tostring(root, encoding="UTF-8")
+    parsed_xml = minidom.parseString(xml_str)
+    pretty_xml = parsed_xml.toprettyxml(indent="  ", newl="\n")
 
-    # Convert tree to XML
-    root = node_to_xml(tree)
+    # Adjust line breaks after specific tags
+    final_xml = adjust_line_breaks(pretty_xml)
 
-    # Save XML to file
-    xml_tree = ET.ElementTree(root)
-    xml_tree.write(file_path, encoding="utf-8", xml_declaration=True)
+    # Save to file
+    with open(file_path, "w", encoding="UTF-8") as f:
+        f.write(final_xml)
+
+
+# For SaveTreeAsXML Function: BT node into an xml element
+def node_to_xml(node, visited=None):
+    if visited is None:
+        visited = set()
+
+    # Prevent circular reference
+    if id(node) in visited:
+        return None
+    visited.add(id(node))
+
+    # Create XML Element
+    element = ET.Element(node.name)
+    if hasattr(node, "children"):
+        for child in node.children:
+            child_xml = node_to_xml(child, visited)
+            if child_xml is not None:
+                element.append(child_xml)
+    return element
+
+
+# For SaveTreeAsXML Function: Post-processing the xml structure
+def adjust_line_breaks(pretty_xml):
+    """Add specific line breaks after </BehaviorTree> and </TreeNodesModel>."""
+    lines = pretty_xml.splitlines()
+    adjusted_lines = []
+    for line in lines:
+        adjusted_lines.append(line)
+        if line.strip() in {"</BehaviorTree>", "</TreeNodesModel>"}:
+            adjusted_lines.append("")  # Add an extra blank line
+    return "\n".join(adjusted_lines)
+
+
+# For SaveTreeAsXML Function: Distinguish between Action nodes and Condition nodes
+def collect_node_definitions(tree, action_set, condition_set):
+    """Collect unique Action and Condition node IDs based on BTNodeList."""
+    if tree.name in BTNodeList.CONDITION_NODES:
+        condition_set.add(tree.name)
+    elif tree.name in BTNodeList.ACTION_NODES:
+        action_set.add(tree.name)
+
+    if hasattr(tree, "children"):
+        for child in tree.children:
+            collect_node_definitions(child, action_set, condition_set)
+
+
+# For SaveTreeAsXML Function: Apply indentation
+def indent(elem, level=0):
+    """Apply pretty printing with indentation."""
+    i = "\n" + "  " * level
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = i + "  "
+        for child in elem:
+            indent(child, level + 1)
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = i
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = i
 

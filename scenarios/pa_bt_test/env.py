@@ -74,7 +74,6 @@ class Env(BaseEnv):
             
             if result == Status.FAILURE:  # Check if the result is FAILURE
                 failed_conditions = agent.find_failed_conditions()  # Identify failed conditions
-                print(f"Failed Conditions: {failed_conditions}")
                 
                 for failed_condition in failed_conditions:
                     # Expand the behavior tree based on the failed condition
