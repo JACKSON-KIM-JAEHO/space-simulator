@@ -7,7 +7,7 @@ CUSTOM_ACTION_NODES = [
     'CompleteTask',
     'MoveToTask',
     'AssignTask',
-    'Exploration'
+    'ExploreTask'
     ]
 
 CUSTOM_CONDITION_NODES = [
@@ -47,7 +47,7 @@ class CompleteTask(SyncAction):
         task_position = assigned_task.position
         agent_position = agent.position
 
-        # 작업 위치 도달 여부 확인
+        # Check whether work location has been reached
         distance = math.sqrt((task_position[0] - agent_position[0])**2 +
                              (task_position[1] - agent_position[1])**2)
         if not assigned_task.completed and distance < 5.0:
@@ -98,16 +98,33 @@ class AssignTask(SyncAction):
         self.agent = agent
 
     def _assign_task(self, agent, blackboard):
-        assigned_task = blackboard.get('local_tasks_info', [])
-        if len(assigned_task) > 0:
-            blackboard['assigned_task'] = assigned_task[0]
-            return Status.SUCCESS
-        return Status.FAILURE
+        tasks = blackboard.get('local_tasks_info', [])
+        if len(tasks) == 0:
+            return Status.FAILURE  # Return FAILURE if no tasks are available
+
+        # Find the closest task to the current position
+        agent_position = agent.position
+        closest_task = None
+        closest_distance = float('inf')
+
+        for task in tasks:
+            distance = math.sqrt(
+                (task.position[0] - agent_position[0])**2 +
+                (task.position[1] - agent_position[1])**2
+            )
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_task = task
+
+        # Assign the closest task
+        blackboard['assigned_task'] = closest_task
+        return Status.SUCCESS
+
 
 
 
 # Exploration node
-class Exploration(SyncAction):
+class ExploreTask(SyncAction):
     def __init__(self, name, agent):
         super().__init__(name, self._random_explore)
         self.random_move_time = float('inf')
@@ -146,9 +163,9 @@ class IsMissionCompleted(SyncCondition):
 
         if len(remaining_tasks) == 0:
             print("All tasks are completed. Mission accomplished!")
-            return Status.SUCCESS  # 모든 작업이 완료된 경우 성공 반환
+            return Status.SUCCESS  # All tasks are completed
         else:
-            return Status.FAILURE  # 남은 작업이 있을 경우 실패 반환
+            return Status.FAILURE
 
 
 
@@ -159,7 +176,7 @@ class IsTaskNearby(SyncCondition):
     def _is_task_nearby(self, agent, blackboard):
         assigned_task = blackboard.get('assigned_task', None)
         if assigned_task is None:
-            return Status.FAILURE  # 작업이 없으면 실패 반환
+            return Status.FAILURE  # Return FAILURE if no tasks are available
 
         task_position = assigned_task.position
         agent_position = agent.position
@@ -175,14 +192,30 @@ class IsTaskNearby(SyncCondition):
 class IsTaskAssigned(SyncCondition):
     def __init__(self, name, agent):
         super().__init__(name, self._is_task_assigned)
-    
+
     def _is_task_assigned(self, agent, blackboard):
-        assigned_task = blackboard.get('local_tasks_info', [])
-        if len(assigned_task) > 0:
-            blackboard['assigned_task'] = assigned_task[0]
-            # Task ID 출력
-            return Status.SUCCESS
-        return Status.FAILURE
+        tasks = blackboard.get('local_tasks_info', [])
+        if len(tasks) == 0:
+            return Status.FAILURE  # Return FAILURE if no tasks are available
+
+        # Find the closest task to the current position
+        agent_position = agent.position
+        closest_task = None
+        closest_distance = float('inf')
+
+        for task in tasks:
+            distance = math.sqrt(
+                (task.position[0] - agent_position[0])**2 +
+                (task.position[1] - agent_position[1])**2
+            )
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_task = task
+
+        # Assign the closest task
+        blackboard['assigned_task'] = closest_task
+        return Status.SUCCESS
+
 
 
 

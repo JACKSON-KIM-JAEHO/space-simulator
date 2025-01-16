@@ -14,7 +14,7 @@
                 <Sequence>
                   <Fallback>
                     <IsTaskSensored/>
-                    <Exploration/>
+                    <ExploreTask/>
                   </Fallback>
                   <AssignTask/>
                 </Sequence>
@@ -32,7 +32,7 @@
   <TreeNodesModel>
     <Action ID="AssignTask"/>
     <Action ID="CompleteTask"/>
-    <Action ID="Exploration"/>
+    <Action ID="ExploreTask"/>
     <Condition ID="IsMissionCompleted"
                editable="true"/>
     <Condition ID="IsTaskAssigned"/>
