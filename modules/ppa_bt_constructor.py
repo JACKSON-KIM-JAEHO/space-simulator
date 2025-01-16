@@ -1,5 +1,6 @@
 # ppa_bt_expansion.py
 from modules.base_bt_nodes import config, Fallback, Sequence, BTNodeList
+from modules.utils import ResultSaver
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import csv
@@ -7,6 +8,7 @@ import os
 import datetime
 import importlib
 bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
+result_saver = ResultSaver(config_file_path="/path/to/config.yaml")
 
 # Algorithm 2: LoadLibrary Function
 def load_library(csv_file_path):
@@ -33,11 +35,18 @@ def expand_behavior_tree(tree, failed_condition, ppa_library):
         ppa_bt = generate_ppa_bt(failed_condition, ppa_fail_entry)
         tree = replace_node_with_ppa_bt(tree, failed_condition, ppa_bt)
 
-        # Set the output directory
-        output_dir = "/home/solarbean23/Desktop/space_dev/space-simulator/scenarios/pa_bt_test/output/xml_output"
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"agent_bt_temp_{timestamp}.xml"
-        file_path = os.path.join(output_dir, file_name)
+        # Generate file path
+        file_path = result_saver.generate_output_filename(extension="xml")
+
+        # Get the plugin class name from config
+        decision_plugin_path = config['decision_making']['plugin']
+        plugin_class_name = decision_plugin_path.rsplit('.', 1)[-1]
+
+        # Remove the plugin class name from the file name
+        directory, filename = os.path.split(file_path)
+        filename = filename.replace(f"{plugin_class_name}_", "")  # Remove the plugin name prefix
+        filename = f"PA_BT_{filename}"
+        file_path = os.path.join(directory, filename)
 
         # Save the updated BT as an XML file
         save_tree_as_xml(tree, file_path)
