@@ -81,26 +81,6 @@ class Agent(BaseAgent):
         # Optionally, draw other elements like the rotating blades on top
         # self.update_color()
 
-    def draw_rotating_blades(self, screen):
-        """Draws rotating blades with animation"""
-        # Update the blade image every few frames to simulate rotation
-        self.frame_count += 1
-        if self.frame_count % self.rotation_speed == 0:
-            self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
-
-        # Get the current blade image
-        blade_image = self.drone_images[self.blade_image_index]
-
-        # Rotate the blade image according to the agent's current rotation
-        rotated_blade_image = pygame.transform.rotate(blade_image, -math.degrees(self.rotation))
-        blade_rect = rotated_blade_image.get_rect(center=(self.position.x, self.position.y))
-
-        # Draw the rotating blade at the agent's position
-        screen.blit(rotated_blade_image, blade_rect.topleft)
-        
-
-
-
 def generate_agents(tasks_info):
     agent_quantity = config['agents']['quantity']
     agent_locations = config['agents']['locations']
