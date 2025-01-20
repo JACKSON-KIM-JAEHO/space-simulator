@@ -18,12 +18,6 @@ car_image = pygame.image.load(car_image_path)
 drone_1_image = pygame.image.load(drone_image_path_1)
 drone_2_image = pygame.image.load(drone_image_path_2)
 drone_3_image = pygame.image.load(drone_image_path_3)
-# TODO: Error occurs when having `convert_alpah`
-# car_image = pygame.image.load(car_image_path).convert_alpha()
-# drone_1_image = pygame.image.load(drone_image_path_1).convert_alpha()
-# drone_2_image = pygame.image.load(drone_image_path_2).convert_alpha()
-# drone_3_image = pygame.image.load(drone_image_path_3).convert_alpha()
-
 
 # Load agent configuration
 work_rate = config['agents']['work_rate']
@@ -41,6 +35,7 @@ class Agent(BaseAgent):
 
         self.task_amount_done = 0.0
         self.end_task_id = None
+        self.mission_finished = False
 
         # Load rotating blade images
         self.drone_images = [
@@ -49,7 +44,7 @@ class Agent(BaseAgent):
         ]
         self.blade_image_index = 0
         self.frame_count = 0
-        self.rotation_speed = 5  # Adjust for how fast you want the blades to rotate
+        self.rotation_speed = 1  # Adjust for how fast you want the blades to rotate, lower number get more faster
   
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
@@ -80,6 +75,12 @@ class Agent(BaseAgent):
 
         # Optionally, draw other elements like the rotating blades on top
         # self.update_color()
+
+    def update_mission_status(self, gathering_point, target_arrive_threshold):
+        distance_to_gathering_point = (gathering_point - self.position).length()
+
+        if distance_to_gathering_point <= target_arrive_threshold:
+            self.mission_finished = True
 
 def generate_agents(tasks_info):
     agent_quantity = config['agents']['quantity']

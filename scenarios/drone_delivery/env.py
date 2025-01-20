@@ -4,11 +4,17 @@ import os
 from modules.utils import pre_render_text, ResultSaver, ObjectToRender
 from scenarios.drone_delivery.task import generate_tasks
 from scenarios.drone_delivery.agent import generate_agents
+from scenarios.drone_delivery.bt_nodes import GatheringNode
 
 class Env(BaseEnv):
     def __init__(self, config):
         super().__init__(config)
-        
+        self.gathering_point = pygame.Vector2(700, 500)
+        self.target_arrive_threshold = 5
+        self.tasks = generate_tasks() or []
+        self.tasks_left = len(self.tasks)
+        self.agents = generate_agents(self.tasks)
+
         # Initialize the background and environment
         self.set_background()
 
@@ -37,18 +43,19 @@ class Env(BaseEnv):
         self.final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
 
     async def step(self):
-        await super().step() # Execution of `step()` in `BaseEnv`           
-            
-        # NOTE: 아래는 재호님 구현 한 부분. Refactoring 필요
-        # tasks_left = sum(1 for task in tasks if not task.completed)
-        # if tasks_left == 0:
-        #     all_agents_gathered = all(
-        #         agent.position.distance_to(pygame.Vector2(700, 500)) < target_arrive_threshold
-        #         for agent in agents
-        # )
-        #     if all_agents_gathered:
-        #         mission_completed = not generation_enabled or generation_count == max_generations
+        await super().step() # Execution of `step()` in `BaseEnv`
 
+        for agent in self.agents:
+            agent.update_mission_status(self.gathering_point, self.target_arrive_threshold)
+
+        self.tasks_left = sum(1 for task in self.tasks if not task.completed)
+        all_agents_gathered = all(agent.mission_finished for agent in self.agents)
+
+        self.mission_completed = self.tasks_left == 0 and all_agents_gathered
+
+        if self.tasks_left == 0 and all_agents_gathered:
+            self.mission_complete = True
+            
     def draw_background(self): # Override
         self.screen.blit(self.background_image, (0, 0))
         self.screen.blit(self.final_point_image, (670, 460))
