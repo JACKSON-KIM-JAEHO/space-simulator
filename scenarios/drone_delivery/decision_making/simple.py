@@ -15,41 +15,36 @@ class MyDecisionMakingClass:
         Output: 
             - `task_id`, if task allocation works well
             - `None`, otherwise
-        '''  
-        assigned_task_id = blackboard.get('assigned_task_id', None)
-        if assigned_task_id is None:
-            available_tasks = blackboard.get('local_tasks_info', [])
-            start_tasks = [
-                task for task in available_tasks 
-                if task.is_start and not task.completed and not task.assigned
-            ]
+        '''        
+        # Get local information from the blackboard
+        local_tasks_info = blackboard['local_tasks_info']
+        local_agents_info = blackboard['local_agents_info']
 
-            if start_tasks:
-                unassigned_tasks = [task for task in start_tasks if not task.assigned]
-                if unassigned_tasks:
-                    closest_task = min(
-                        unassigned_tasks, 
-                        key=lambda task: self.agent.position.distance_to(task.position)
-                    )
-                    assigned_task_id = closest_task.task_id
-                    closest_task.assigned = True
-                    blackboard['assigned_task_id'] = assigned_task_id
-                    end_task_id = closest_task.get_pair_task_id()
-                    blackboard['end_task_id'] = end_task_id
-                    return assigned_task_id
+        # Post-process if the previously assigned task is done        
+        if self.assigned_task is not None and self.assigned_task.completed:            
+            # Implement your idea
+            pass
 
+        # Give up the decision-making process if there is no task nearby 
+        if len(local_tasks_info) == 0: 
             return None
+        
+        # Local decision-making
+        if not self.satisfied:
+            # Implement your idea (local decision-making)
 
-        else:
-            end_task_id = blackboard.get('end_task_id')
-            if end_task_id is None:
-                current_task = next(
-                    (task for task in blackboard.get('local_tasks_info', []) if task.task_id == assigned_task_id),
-                    None
-                )
-                if current_task:
-                    end_task_id = current_task.get_pair_task_id()
-                    blackboard['end_task_id'] = end_task_id
-            return end_task_id
+
+            # Broadcasting
+            self.agent.message_to_share = {
+                # Implement your idea (data to share)
+            }
+            self.satisfied = True
+            return None
+            
+        # Conflict-mitigating
+        if self.satisfied:
+            # Implement your idea (conflict-mitigating)
+            pass
+            return self.assigned_task.task_id if self.assigned_task is not None else None
 
 

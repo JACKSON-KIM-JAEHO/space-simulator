@@ -62,15 +62,17 @@ class Env(BaseEnv):
 
     def draw_tasks_info(self):
         super().draw_tasks_info()
-
-        # Line btw the pick-up point to the delivery point
-        for idx in range(0, len(self.tasks), 2):
-            start_task = self.tasks[idx]
-            end_task = self.tasks[idx + 1]
-            if not end_task.completed:
-                pygame.draw.line(self.screen, start_task.color, start_task.position, end_task.position, width=2)
-            start_task.draw(self.screen)
-            end_task.draw(self.screen) 
+    
+        for task in self.tasks:
+            if task.pickup_completed and not task.completed:
+                pygame.draw.line(
+                    self.screen,
+                    task.color,
+                    (task.pickup_position.x, task.pickup_position.y),
+                    (task.delivery_position.x, task.delivery_position.y),
+                    width=2
+                    )
+            task.draw(self.screen)
     
     def save_results(self):
         # Save gif

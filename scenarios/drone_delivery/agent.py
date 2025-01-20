@@ -29,6 +29,7 @@ behavior_tree_xml = f"{os.path.dirname(os.path.abspath(__file__))}/{config['agen
 class Agent(BaseAgent):
     def __init__(self, agent_id, position, tasks_info):
         super().__init__(agent_id, position, tasks_info)
+        self.id = agent_id
         self.work_rate = work_rate
         self.decision_maker = None
         self.visible = True
