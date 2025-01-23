@@ -42,7 +42,9 @@ class Agent(BaseAgent):
         ]
         self.blade_image_index = 0
         self.frame_count = 0
-        self.rotation_speed = 1  # Adjust for how fast you want the blades to rotate, lower number get more faster
+        self.default_rotation_speed = 5  # Adjust for how fast you want the blades to rotate, higher number get more faster
+        self.rotation_speed = self.default_rotation_speed  # 현재 회전 속도
+        #self.rotation_speed = 10  
   
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
@@ -54,14 +56,15 @@ class Agent(BaseAgent):
             self.target_position = pygame.math.Vector2(task_center["x"], task_center["y"])
             '''
 
-    def draw(self, screen):
+    def draw(self, screen, paused = False):
         if not self.visible:
             return
-            
+           
          # Cycling through blade images for animation
-        self.frame_count += 1
-        if self.frame_count % self.rotation_speed == 0:
-            self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
+        if not paused:
+            self.frame_count += 1
+            if self.frame_count % self.rotation_speed == 0:
+                self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
 
         drone_image = self.drone_images[self.blade_image_index]
 
