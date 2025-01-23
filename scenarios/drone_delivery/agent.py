@@ -7,14 +7,11 @@ from modules.base_agent import BaseAgent
 
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__)) 
 ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
-CAR_DIR = os.path.join(ASSETS_DIR, 'car')
 DRONE_DIR = os.path.join(ASSETS_DIR, 'drone')
-car_image_path = os.path.join(CAR_DIR, 'white.png')
 drone_image_path_1 = os.path.join(DRONE_DIR, 'drone_1.png')
 drone_image_path_2 = os.path.join(DRONE_DIR, 'drone_2.png')
 drone_image_path_3 = os.path.join(DRONE_DIR, 'drone_3.png')
 
-car_image = pygame.image.load(car_image_path)
 drone_1_image = pygame.image.load(drone_image_path_1)
 drone_2_image = pygame.image.load(drone_image_path_2)
 drone_3_image = pygame.image.load(drone_image_path_3)
@@ -50,6 +47,12 @@ class Agent(BaseAgent):
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
         self.assigned_task_id = task_id
+        '''
+        task_info = tasks_info.get(task_id, None)
+        if task_info:
+            task_center = task_info["center"]
+            self.target_position = pygame.math.Vector2(task_center["x"], task_center["y"])
+            '''
 
     def draw(self, screen):
         if not self.visible:
@@ -59,12 +62,6 @@ class Agent(BaseAgent):
         self.frame_count += 1
         if self.frame_count % self.rotation_speed == 0:
             self.blade_image_index = (self.blade_image_index + 1) % len(self.drone_images)
-
-        resized_image = pygame.transform.scale(car_image, (0, 0))
-        rotated_image = pygame.transform.rotate(resized_image, -math.degrees(self.rotation))
-        
-        image_rect = rotated_image.get_rect(center=(self.position.x, self.position.y))
-        screen.blit(rotated_image, image_rect.topleft)
 
         drone_image = self.drone_images[self.blade_image_index]
 
