@@ -247,8 +247,29 @@ class ExplorationNode(SyncAction):
         super().__init__(name, self._random_explore)
         self.random_move_time = float('inf')
         self.random_waypoint = (0, 0)
+        self.gathering_point = pygame.Vector2(700, 500) # gathering point(700, 500)
+        self.target_arrive_threshold = target_arrive_threshold
 
     def _random_explore(self, agent, blackboard):
+
+        # Check if there are available tasks
+        available_tasks = [
+            task for task in agent.tasks_info
+            if not task.assigned and not task.delivery_completed
+        ]
+
+        if not available_tasks:
+            # 집결 모드로 전환
+            distance_to_gathering = (self.gathering_point - agent.position).length()
+            if distance_to_gathering > self.target_arrive_threshold:
+                agent.follow(self.gathering_point)  # 집결 지점으로 이동
+                return Status.RUNNING
+            else:
+                # 집결 지점에 도착
+                blackboard['gathering_mode'] = True
+                agent.reset_movement()
+                agent.visible = False  # 집결 시 숨김 처리
+                return Status.SUCCESS
         
         current_position = agent.position
         target_position = self.random_waypoint
