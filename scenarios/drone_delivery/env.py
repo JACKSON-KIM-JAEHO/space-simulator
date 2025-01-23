@@ -28,6 +28,10 @@ class Env(BaseEnv):
         self.data_records = []
         self.result_saver = ResultSaver(config)
 
+        #self._paused_pressed = False
+        self.previous_paused_state = None  # 상태 변경 감지를 위한 변수
+
+
     def set_background(self):
         CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
         ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
@@ -113,3 +117,16 @@ class Env(BaseEnv):
             tasks_total_amount_left
         ])        
                   
+    def draw_agents(self):
+        for agent in self.agents:
+            agent.draw(self.screen, paused=self.game_paused)
+
+    def handle_keyboard_events(self):
+        # 기존 부모 클래스의 동작 유지
+        super().handle_keyboard_events()
+
+        # 추가로 `p` 키에 대해 멈춤 상태 토글
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_p:
+                    self.game_paused = not self.game_paused
