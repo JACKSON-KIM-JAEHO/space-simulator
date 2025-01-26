@@ -54,10 +54,9 @@ class Env(BaseEnv):
 
         self.tasks_left = sum(1 for task in self.tasks if not task.completed)
         all_agents_gathered = all(
-            (self.gathering_point - agent.position).length() <= self.target_arrive_threshold
-            for agent in self.agents
-        )
-
+                                (self.gathering_point - agent.position).length() <= self.target_arrive_threshold
+                                for agent in self.agents
+                                )
         self.mission_completed = self.tasks_left == 0 and all_agents_gathered
 
         if self.tasks_left == 0 and all_agents_gathered:
