@@ -1,6 +1,6 @@
 import pygame
 import random
-from modules.utils import config, generate_positions, generate_task_colors
+from modules.utils import config, generate_positions
 from modules.base_task import BaseTask
 import os
 
@@ -21,7 +21,6 @@ dynamic_task_generation = config['tasks'].get('dynamic_task_generation', {})
 max_generations = dynamic_task_generation.get('max_generations', 0) if dynamic_task_generation.get('enabled', False) else 0
 tasks_per_generation = dynamic_task_generation.get('tasks_per_generation', 0) if dynamic_task_generation.get('enabled', False) else 0
 
-task_colors = generate_task_colors(config['tasks']['quantity'] + tasks_per_generation*max_generations)
 
 sampling_freq = config['simulation']['sampling_freq']
 sampling_time = 1.0 / sampling_freq  # in seconds
@@ -32,7 +31,7 @@ class Task(BaseTask):
         self.delivery_position = delivery_position
         self.amount = random.uniform(config['tasks']['amounts']['min'], config['tasks']['amounts']['max'])        
         self.radius = self.amount / config['simulation']['task_visualisation_factor']
-        self.color = task_colors.get(self.task_id, (0, 0, 0))  # Default to black if task_id not found
+        self.color = color
         self.assigned = False
         self.completed = False
         self.pickup_completed = False
