@@ -43,8 +43,7 @@ class Agent(BaseAgent):
         self.blade_image_index = 0
         self.frame_count = 0
         self.default_rotation_speed = 5  # Adjust for how fast you want the blades to rotate, higher number get more faster
-        self.rotation_speed = self.default_rotation_speed  # 현재 회전 속도
-        #self.rotation_speed = 10  
+        self.rotation_speed = self.default_rotation_speed 
   
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
@@ -75,16 +74,11 @@ class Agent(BaseAgent):
         if distance_to_gathering_point <= target_arrive_threshold:
             self.mission_finished = True
 
-def generate_agents(tasks_info):
+def generate_agents(tasks_info, gathering_point=(700, 500)):
     agent_quantity = config['agents']['quantity']
-    agent_locations = config['agents']['locations']
 
-    agents_positions = generate_positions(agent_quantity,
-                                      agent_locations['x_min'],
-                                      agent_locations['x_max'],
-                                      agent_locations['y_min'],
-                                      agent_locations['y_max'],
-                                      radius=agent_locations['non_overlap_radius'])
+    agents_positions = [pygame.math.Vector2(gathering_point) for _ in range(agent_quantity)]
+
 
     # Initialize agents
     agents = [Agent(idx, pos, tasks_info) for idx, pos in enumerate(agents_positions)]

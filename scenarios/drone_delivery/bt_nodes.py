@@ -216,7 +216,7 @@ class CheckingnomoreTask(SyncAction):
 class GatheringNode(SyncAction):
     def __init__(self, name, agents, total_agents = None):
         super().__init__(name, self._gather_to_point)
-        #self.gathering_mode = False 
+        self.gathering_mode = False 
         self.gathering_point = pygame.Vector2(700, 500) # gathering point(700, 500)
         self.target_arrive_threshold = target_arrive_threshold
         self.total_agents = total_agents

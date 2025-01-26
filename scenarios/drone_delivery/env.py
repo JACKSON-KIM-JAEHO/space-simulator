@@ -13,7 +13,7 @@ class Env(BaseEnv):
         self.target_arrive_threshold = 5
         self.tasks = generate_tasks() or []
         self.tasks_left = len(self.tasks)
-        self.agents = generate_agents(self.tasks)
+        self.agents = generate_agents(self.tasks, gathering_point=self.gathering_point)
 
         # Initialize the background and environment
         self.set_background()
@@ -53,7 +53,10 @@ class Env(BaseEnv):
             agent.update_mission_status(self.gathering_point, self.target_arrive_threshold)
 
         self.tasks_left = sum(1 for task in self.tasks if not task.completed)
-        all_agents_gathered = all(agent.mission_finished for agent in self.agents)
+        all_agents_gathered = all(
+            (self.gathering_point - agent.position).length() <= self.target_arrive_threshold
+            for agent in self.agents
+        )
 
         self.mission_completed = self.tasks_left == 0 and all_agents_gathered
 
