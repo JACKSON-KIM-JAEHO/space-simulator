@@ -234,8 +234,7 @@ class GatheringNode(SyncAction):
         self.agents_arrived.add(agent_id)
         agent.position = self.gathering_point
         agent.reset_movement() 
-        agent.visible = False # make dissapear when agents are arrived at the final point
-        
+        agent.visible = True
         if self.total_agents is not None and len(self.agents_arrived) == self.total_agents:
             return Status.SUCCESS  # Mission Complete
         return Status.RUNNING
@@ -268,7 +267,7 @@ class ExplorationNode(SyncAction):
                 # 집결 지점에 도착
                 blackboard['gathering_mode'] = True
                 agent.reset_movement()
-                agent.visible = False  # 집결 시 숨김 처리
+                agent.visible = True
                 return Status.SUCCESS
         
         current_position = agent.position

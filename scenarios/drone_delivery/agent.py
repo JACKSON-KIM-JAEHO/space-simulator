@@ -49,16 +49,8 @@ class Agent(BaseAgent):
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
         self.assigned_task_id = task_id
-        '''
-        task_info = tasks_info.get(task_id, None)
-        if task_info:
-            task_center = task_info["center"]
-            self.target_position = pygame.math.Vector2(task_center["x"], task_center["y"])
-            '''
 
     def draw(self, screen, paused = False):
-        if not self.visible:
-            return
            
          # Cycling through blade images for animation
         if not paused:
