@@ -69,10 +69,7 @@ class Agent(BaseAgent):
         # self.update_color()
 
     def update_mission_status(self, gathering_point, target_arrive_threshold):
-        distance_to_gathering_point = (gathering_point - self.position).length()
-
-        if distance_to_gathering_point <= target_arrive_threshold:
-            self.mission_finished = True
+        self.mission_finished = (gathering_point - self.position).length() <= target_arrive_threshold
 
 def generate_agents(tasks_info, gathering_point=(700, 500)):
     agent_quantity = config['agents']['quantity']
