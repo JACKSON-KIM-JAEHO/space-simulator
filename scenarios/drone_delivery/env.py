@@ -20,7 +20,7 @@ class Env(BaseEnv):
 
         # Initialize agents and tasks
         self.tasks = generate_tasks()
-        max_task_count = config['tasks']['quantity']  # config.yaml에 정의된 task 수
+        max_task_count = config['tasks']['quantity']
         self.agents = generate_agents(self.tasks)
         self.generate_tasks = generate_tasks
 
@@ -29,7 +29,7 @@ class Env(BaseEnv):
         self.result_saver = ResultSaver(config)
 
         #self._paused_pressed = False
-        self.previous_paused_state = None  # 상태 변경 감지를 위한 변수
+        self.previous_paused_state = None
 
 
     def set_background(self):
@@ -122,10 +122,8 @@ class Env(BaseEnv):
             agent.draw(self.screen, paused=self.game_paused)
 
     def handle_keyboard_events(self):
-        # 기존 부모 클래스의 동작 유지
         super().handle_keyboard_events()
 
-        # 추가로 `p` 키에 대해 멈춤 상태 토글
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p:
