@@ -39,36 +39,31 @@ class DecisionMakingNode(SyncAction):
     def _make_decision(self, agent, blackboard):        
         assigned_task_id = blackboard.get('assigned_task_id')
 
-        # 작업이 이미 할당된 경우
+        # if task is already assigned
         if assigned_task_id is not None:
-            task = agent.tasks_info[assigned_task_id]
-            if task.pickup_completed and task.delivery_completed:
-                # Pick-up과 Delivery가 완료되었으면 할당 해제
-                blackboard['assigned_task_id'] = None
-                return Status.SUCCESS
-            return Status.RUNNING  # 작업이 진행 중
+            return Status.SUCCESS
+            
 
-        # 작업이 할당되지 않은 경우, 새로운 작업 할당
+        # if task isn't assigned, allocate new task
         available_tasks = [
             task for task in agent.tasks_info
             if not task.assigned and not task.delivery_completed
         ]
 
         if not available_tasks:
-            # 할당 가능한 작업이 없으면 실패 반환
             return Status.FAILURE
 
-        # 할당 가능한 작업 중 가장 적합한 작업 선택 (예: 거리 기반)
+        # Select the most appropriate task among allocable tasks
         optimal_task = self._select_optimal_task(agent, available_tasks)
 
-        # 작업 할당
+        # allocate task
         optimal_task.assigned = True
         blackboard['assigned_task_id'] = optimal_task.task_id
         return Status.SUCCESS
 
     def _select_optimal_task(self, agent, tasks):
         """
-        거리 기반으로 가장 적합한 작업 선택
+        select optimal task based on distance
         """
         agent_position = agent.position
         return min(
@@ -110,31 +105,29 @@ class DeliveryexecutingNode(SyncAction):
         task = agent.tasks_info[task_id]
         agent_position = agent.position
 
-        # Pick-up 단계
+        # Pick-up
         if not task.pickup_completed:
             target_position = task.pickup_position
-        # Delivery 단계
+        # Delivery
         elif not task.delivery_completed:
             target_position = task.delivery_position
         else:
-            # 작업 완료
+            # all tasks are done
             return Status.SUCCESS
 
-        # 거리 계산
+        # caculate distance
         distance = math.sqrt(
             (target_position.x - agent_position.x) ** 2 +
             (target_position.y - agent_position.y) ** 2
         )
 
-        # 목표 위치 도착 처리
         if distance < task.radius + target_arrive_threshold:
             if not task.pickup_completed:
-                task.complete_pickup()  # Pick-up 완료 처리
+                task.complete_pickup()  # Pick-up done
             elif not task.delivery_completed:
-                task.complete_delivery()  # Delivery 완료 처리
+                task.complete_delivery()  # Delivery done
                 return Status.SUCCESS
         else:
-            # 목표 위치로 이동
             agent.follow(target_position)
 
         return Status.RUNNING
@@ -170,13 +163,11 @@ class DropoffexecutingNode(SyncAction):
 
         task = agent.tasks_info[task_id]
 
-        # Delivery 작업 처리
         if not task.pickup_completed:
             target_position = task.pickup_position
         elif not task.delivery_completed:
             target_position = task.delivery_position
         else:
-            # 작업 완료 처리
             task.check_completion()
             return Status.SUCCESS
         
@@ -187,13 +178,11 @@ class DropoffexecutingNode(SyncAction):
             (target_position.y - agent_position.y) ** 2
         )
 
-        # Delivery 위치 도착 처리
         if distance < task.radius + target_arrive_threshold:
-            task.complete_delivery()  # Delivery 완료 처리
-            blackboard['assigned_task_id'] = None  # 작업 해제
+            task.complete_delivery()  # Delivery done
+            blackboard['assigned_task_id'] = None 
             return Status.SUCCESS
         else:
-            # 목표 위치로 이동
             agent.follow(target_position)
             
         return Status.RUNNING
@@ -258,13 +247,12 @@ class ExplorationNode(SyncAction):
         ]
 
         if not available_tasks:
-            # 집결 모드로 전환
             distance_to_gathering = (self.gathering_point - agent.position).length()
             if distance_to_gathering > self.target_arrive_threshold:
-                agent.follow(self.gathering_point)  # 집결 지점으로 이동
+                agent.follow(self.gathering_point)  # move to gathering point
                 return Status.RUNNING
             else:
-                # 집결 지점에 도착
+                # arrived
                 blackboard['gathering_mode'] = True
                 agent.reset_movement()
                 agent.visible = True
