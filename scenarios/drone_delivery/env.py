@@ -53,7 +53,7 @@ class Env(BaseEnv):
             agent.update_mission_status(self.gathering_point, self.target_arrive_threshold)
 
         self.tasks_left = sum(1 for task in self.tasks if not task.completed)
-        all_agents_gathered = all(agent.mission_finished for agent in self.agents)
+        all_agents_gathered = all(agent.reached_gathering_point for agent in self.agents)
 
         self.mission_completed = self.tasks_left == 0 and all_agents_gathered
 

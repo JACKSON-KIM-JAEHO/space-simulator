@@ -33,7 +33,7 @@ class Agent(BaseAgent):
 
         self.task_amount_done = 0.0
         self.end_task_id = None
-        self.mission_finished = False
+        self.reached_gathering_point = False
 
         # Load rotating blade images
         self.drone_images = [
@@ -68,7 +68,7 @@ class Agent(BaseAgent):
         # self.update_color()
 
     def update_mission_status(self, gathering_point, target_arrive_threshold):
-        self.mission_finished = (gathering_point - self.position).length() <= target_arrive_threshold
+        self.reached_gathering_point = (gathering_point - self.position).length() <= target_arrive_threshold
 
 def generate_agents(tasks_info, gathering_point=(700, 500)):
     agent_quantity = config['agents']['quantity']
