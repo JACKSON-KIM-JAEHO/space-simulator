@@ -1,5 +1,18 @@
 # CHANGELOG.md
 
+## [Unreleased]
+
+### Changed
+- **Behavior Tree**:
+  - Updated `Sequence` and `Fallback` in `base_bt_nodes.py`:
+    - Now, when a child returns `RUNNING`, the node returns `RUNNING` without proceeding to the next child.
+    - If the `Sequence` or `Fallback` node is ticked again, it resumes execution from the child that was previously `RUNNING`.
+
+- **Scenario: Simple**:
+  - Modified `TaskExecutingNode` and `ExploringNode` in `simple/bt_nodes.py`:
+    - Now, a single-step movement is considered `SUCCESS`.
+
+
 ## Version 1.2.15 (25-01-02)
 ### New Scenario
 - **Drone Delivery**:

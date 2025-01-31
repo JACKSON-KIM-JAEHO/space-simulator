@@ -39,7 +39,7 @@ class TaskExecutingNode(SyncAction):
             # Move towards the task position
             agent.follow(next_waypoint)
 
-        return Status.RUNNING
+        return Status.SUCCESS
 
 
 # Exploration node
@@ -58,7 +58,7 @@ class ExplorationNode(SyncAction):
         blackboard['random_waypoint'] = self.random_waypoint        
         self.random_move_time += sampling_time   
         agent.follow(self.random_waypoint)         
-        return Status.RUNNING
+        return Status.SUCCESS
         
     def get_random_position(self, x_min, x_max, y_min, y_max):
         pos = (random.randint(x_min, x_max),
