@@ -94,6 +94,9 @@ class BaseEnv:
             await agent.run_tree()
             agent.update()
 
+        self.update_simulation()
+
+    def update_simulation(self):
         # Status retrieval
         self.simulation_time += self.sampling_time
         self.tasks_left = sum(1 for task in self.tasks if not task.completed)
@@ -107,7 +110,7 @@ class BaseEnv:
 
         # Stop if maximum simulation time reached
         if self.max_simulation_time > 0 and self.simulation_time > self.max_simulation_time:
-            self.running = False
+            self.running = False        
 
     def draw_background(self):
         self.screen.fill(self.background_color)

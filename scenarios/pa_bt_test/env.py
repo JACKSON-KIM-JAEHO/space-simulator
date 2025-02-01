@@ -15,18 +15,25 @@ class Env(BaseEnv):
         ppa_library_path = config['simulation'].get('ppa_library_path', 'ppa_library.csv')
         self.ppa_library = load_library(ppa_library_path)
 
-        # Initialize agents and tasks
-        self.tasks = generate_tasks()
-        self.agents = generate_agents(self.tasks)
-        self.tasks_left = len(self.tasks)  # 초기 작업 수를 설정
-        
         # Set `generate_tasks` function for dynamic task generation
         self.generate_tasks = generate_tasks
         
+        # Set data recording
+        self.result_saver = ResultSaver(config)
+
+        # Initialise
+        self.reset()
+
+    def reset(self):
+        super().reset()
+
+        # Initialize agents and tasks
+        self.tasks = generate_tasks()
+        self.agents = generate_agents(self.tasks)
+        
         # Initialize data recording
         self.data_records = []
-        self.result_saver = ResultSaver(config)
-           
+
     def save_results(self):
         # Save gif
         if self.save_gif and self.rendering_mode == "Screen":        
@@ -82,17 +89,4 @@ class Env(BaseEnv):
             agent.update()
         # 필요 시, 디버그 추가, agent.blackboard 활용. (대신 last agent인 경우만)
 
-        # Status retrieval
-        self.simulation_time += self.sampling_time
-        self.tasks_left = sum(1 for task in self.tasks if not task.completed)
-        if self.tasks_left == 0:
-            self.mission_completed = not self.generation_enabled or self.generation_count == self.max_generations
-
-        # Dynamic task generation
-        if self.generation_enabled:
-            self.generate_tasks_if_needed()
-
-
-        # Stop if maximum simulation time reached
-        if self.max_simulation_time > 0 and self.simulation_time > self.max_simulation_time:
-            self.running = False
+        self.update_simulation()
