@@ -7,7 +7,7 @@ import csv
 import os
 import importlib
 bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
-result_saver = ResultSaver(config_file_path="/path/to/config.yaml")
+result_saver = ResultSaver(config_file_path="/path/to/config.yaml")  #TODO: Needs debug
 
 # Algorithm 2: LoadLibrary Function
 def load_library(csv_file_path):
