@@ -5,7 +5,6 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import csv
 import os
-import datetime
 import importlib
 bt_module = importlib.import_module(config.get('scenario').get('environment') + ".bt_nodes")
 result_saver = ResultSaver(config_file_path="/path/to/config.yaml")
@@ -14,15 +13,20 @@ result_saver = ResultSaver(config_file_path="/path/to/config.yaml")
 def load_library(csv_file_path):
     ppa_library = {}
     with open(csv_file_path, "r") as csvfile:
-        csv_data = csv.DictReader(csvfile)
+        csv_data = csv.reader(csvfile)
+        header = next(csv_data)  # Read the header row
+        
         for row in csv_data:
-            Post_condition = row["Post_condition"]
-            Action = row["Action"]
-            Pre_conditions = row["Pre_conditions"].split(",") if row["Pre_conditions"] else []
+            Post_condition = row[0]  # First column
+            Action = row[1]  # Second column
+            Pre_conditions = row[2:]  # All remaining columns from the third onward
+            Pre_conditions = [cond.strip() for cond in Pre_conditions if cond.strip()]  # Remove any empty or whitespace-only values
+
             ppa_library[Post_condition] = {
                 "action": Action,
                 "pre_conditions": Pre_conditions
             }
+
     print(f"ppa_library: {ppa_library}")
     return ppa_library
 
@@ -60,30 +64,36 @@ def generate_ppa_bt(post_condition, ppa_fail_entry):
     # Create Fallback Node
     fallback = Fallback("Fallback", children=[])
 
-    # Check if Pre-conditions exist
-    if ppa_fail_entry["pre_conditions"]:
-        # Add Pre-conditions as Sequence Node
-        sequence = Sequence("Sequence", [])
-        for pre_condition in ppa_fail_entry["pre_conditions"]:
-            condition_class = getattr(bt_module, pre_condition)
-            condition_node = condition_class(pre_condition, None)
-            sequence.children.append(condition_node)
+    # Initialize Seqeunce Node
+    sequence = None
 
-        # Add Action Node
-        action_class = getattr(bt_module, ppa_fail_entry["action"])
-        action_node = action_class(ppa_fail_entry["action"], None)
-        sequence.children.append(action_node)
-    else:
-        # If no Pre-conditions, directly use Action Node
-        action_class = getattr(bt_module, ppa_fail_entry["action"])
-        sequence = action_class(ppa_fail_entry["action"], None)
+    # Check if Pre-conditions exist
+    if ppa_fail_entry["action"]:
+        if ppa_fail_entry["pre_conditions"]:
+            sequence = Sequence("Sequence", [])
+            # Add Pre-conditions as Sequence Node
+            for pre_condition in ppa_fail_entry["pre_conditions"]:
+                condition_class = getattr(bt_module, pre_condition)
+                condition_node = condition_class(pre_condition, None)
+                sequence.children.append(condition_node)
+
+            # Add Action Node
+            action_class = getattr(bt_module, ppa_fail_entry["action"])
+            action_node = action_class(ppa_fail_entry["action"], None)
+            sequence.children.append(action_node)
+        else:
+            # If no Pre-conditions, directly use Action Node
+            action_class = getattr(bt_module, ppa_fail_entry["action"])
+            sequence = action_class(ppa_fail_entry["action"], None)
 
     # Add Post-condition Node to Fallback
     condition_class = getattr(bt_module, post_condition)
     condition_node = condition_class(post_condition, None)
     condition_node.set_expanded()
     fallback.children.append(condition_node)
-    fallback.children.append(sequence)
+    # Add Sequence only if it exists (not None)
+    if sequence:
+        fallback.children.append(sequence)
 
     return fallback
 
