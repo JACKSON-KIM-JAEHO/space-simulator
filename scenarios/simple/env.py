@@ -2,22 +2,31 @@ from modules.base_env import BaseEnv
 from modules.utils import ResultSaver
 from scenarios.simple.task import generate_tasks
 from scenarios.simple.agent import generate_agents
+import pygame
 
 class Env(BaseEnv):
     def __init__(self, config):
         super().__init__(config)
 
+        # Set `generate_tasks` function for dynamic task generation
+        self.generate_tasks = generate_tasks
+        
+        # Set data recording
+        self.result_saver = ResultSaver(config)
+
+        # Initialise
+        self.reset()
+
+    def reset(self):
+        super().reset()
+
         # Initialize agents and tasks
         self.tasks = generate_tasks()
         self.agents = generate_agents(self.tasks)
         
-        # Set `generate_tasks` function for dynamic task generation
-        self.generate_tasks = generate_tasks
-        
         # Initialize data recording
         self.data_records = []
-        self.result_saver = ResultSaver(config)
-           
+
     def save_results(self):
         # Save gif
         if self.save_gif and self.rendering_mode == "Screen":        
