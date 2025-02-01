@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Planning-and-Acting Behavior Tree (`pa_bt_constructor.py`)**
+  - Added the PA-BT functionality
+
 - **Behavior Tree (`base_bt_nodes.py`)**
   - Implemented `ReactiveSequence` and `ReactiveFallback`, which restart from the first child at every tick.
   - Added `halt` functionality to `Sequence`, `ReactiveSequence`, `Fallback`, and `ReactiveFallback` to stop all children when necessary.
