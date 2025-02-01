@@ -19,6 +19,10 @@
   - Added `IsTaskCompleted`, `IsArrivedAtTarget`, `MoveToTarget`, and `ExecuteTask` to the simple scenario. These replace the functionality of `TaskExecutingNode`, which has been removed.   
   - Renamed `ExplorationNode` to `Explore()` following the new naming convention (using verb forms).     
 
+- **Environment**
+  - Modified `env.reset()` to restart with a new random scenario.  
+  - Changed GIF saving trigger to the `S` key. Updated the `R` key to manually execute `env.reset()`.  
+
 ### Fixed  
 - **CBBA (`cbba.py`)**
   - Even if an agent has no local task information, it follows the task bundle (if it is available) information instead.  
