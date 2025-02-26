@@ -181,6 +181,7 @@ class DropoffexecutingNode(SyncAction):
 
         if distance < task.radius + target_arrive_threshold:
             task.complete_delivery()  # Delivery done
+            agent.update_task_amount_done(1)
             blackboard['assigned_task_id'] = None 
             return Status.SUCCESS
         else:

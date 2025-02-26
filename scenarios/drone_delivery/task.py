@@ -9,13 +9,13 @@ ASSETS_DIR = os.path.join(PROJECT_ROOT, 'assets')
 POINT_DIR = os.path.join(ASSETS_DIR, 'point')
 
 start_image_path = os.path.join(POINT_DIR, 'pickup_point.png')
-end_image_path = os.path.join(POINT_DIR, 'dropoff_point.png')
+end_image_path = os.path.join(POINT_DIR, 'dropoff_point_rev.png')
 
 start_image = pygame.image.load(start_image_path)
 end_image = pygame.image.load(end_image_path)
 
-resized_start_image = pygame.transform.scale(start_image, (65, 65))
-resized_end_image = pygame.transform.scale(end_image, (80, 80))
+resized_start_image = pygame.transform.scale(start_image, (65, 45))
+resized_end_image = pygame.transform.scale(end_image, (65, 70))
 
 dynamic_task_generation = config['tasks'].get('dynamic_task_generation', {})
 max_generations = dynamic_task_generation.get('max_generations', 0) if dynamic_task_generation.get('enabled', False) else 0
@@ -44,9 +44,11 @@ class Task(BaseTask):
        
     def draw(self, screen):
         if not self.pickup_completed:
+            pygame.draw.ellipse(screen, self.color, pygame.Rect(self.position.x-25, self.position.y+10, int(50), int(15)))
             image_rect = resized_start_image.get_rect(center=(self.position.x, self.position.y))
             screen.blit(resized_start_image, image_rect.topleft)
         elif not self.delivery_completed:
+            pygame.draw.ellipse(screen, self.color, pygame.Rect(self.delivery_position.x-30, self.delivery_position.y+15, int(60), int(15)))
             image_rect = resized_end_image.get_rect(center=(self.delivery_position.x, self.delivery_position.y))   
             screen.blit(resized_end_image, image_rect.topleft)
 
