@@ -59,7 +59,7 @@ tasks:
     max: 60.0      
   dynamic_task_generation:
     enabled: True
-    interval_seconds: 500
+    interval_seconds: 1500
     max_generations: 3
     tasks_per_generation: 20
 
