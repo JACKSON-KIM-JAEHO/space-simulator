@@ -213,14 +213,13 @@ class GatheringNode(SyncAction):
         self.agents_arrived = set()
 
     def _gather_to_point(self, agent, blackboard):
-        agent_id = agent.id
         distance_to_target = (self.gathering_point - agent.position).length()
 
         if distance_to_target > self.target_arrive_threshold:
             agent.follow(self.gathering_point)
             return Status.RUNNING
         
-        self.agents_arrived.add(agent_id)
+        self.agents_arrived.add(agent.agent_id)
         agent.position = self.gathering_point
         agent.reset_movement() 
         agent.visible = True
