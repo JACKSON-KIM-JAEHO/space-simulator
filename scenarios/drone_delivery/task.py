@@ -36,7 +36,11 @@ class Task(BaseTask):
         self.completed = False
         self.pickup_completed = False
         self.delivery_completed = False
-    
+        self.assigned_agent_id = None
+
+    def set_assigned_agent_id(self, agent_id):
+        self.assigned_agent_id = agent_id
+
        
     def draw(self, screen):
         if not self.pickup_completed:

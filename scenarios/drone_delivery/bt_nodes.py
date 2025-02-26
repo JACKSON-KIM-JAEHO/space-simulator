@@ -124,6 +124,7 @@ class DeliveryexecutingNode(SyncAction):
         if distance < task.radius + target_arrive_threshold:
             if not task.pickup_completed:
                 task.complete_pickup()  # Pick-up done
+                task.set_assigned_agent_id(agent.agent_id)
             elif not task.delivery_completed:
                 task.complete_delivery()  # Delivery done
                 return Status.SUCCESS

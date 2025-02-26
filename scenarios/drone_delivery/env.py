@@ -78,12 +78,13 @@ class Env(BaseEnv):
     
         for task in self.tasks:
             if task.pickup_completed and not task.completed:
+                agent_position = self.agents[task.assigned_agent_id].position
                 pygame.draw.line(
                     self.screen,
                     task.color,
-                    (task.pickup_position.x, task.pickup_position.y),
+                    (agent_position.x, agent_position.y),
                     (task.delivery_position.x, task.delivery_position.y),
-                    width=2
+                    width=3
                     )
             task.draw(self.screen)
     
