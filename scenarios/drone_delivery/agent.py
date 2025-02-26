@@ -41,7 +41,7 @@ class Agent(BaseAgent):
         ]
         self.blade_image_index = 0
         self.frame_count = 0
-        self.rotation_speed = 5 # Adjust for how fast you want the blades to rotate, higher number get more faster
+        self.rotation_speed = 5  # Adjust for how fast you want the blades to rotate
   
     def set_end_task_id(self, task_id):
         self.end_task_id = task_id
