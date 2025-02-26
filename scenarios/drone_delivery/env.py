@@ -18,15 +18,24 @@ class Env(BaseEnv):
         # Initialize the background and environment
         self.set_background()
 
+        # Set `generate_tasks` function for dynamic task generation
+        self.generate_tasks = generate_tasks
+        
+        # Set data recording
+        self.result_saver = ResultSaver(config)
+
+        # Initialise
+        self.reset()
+
+    def reset(self):
+        super().reset()
+
         # Initialize agents and tasks
         self.tasks = generate_tasks()
-        max_task_count = config['tasks']['quantity']
         self.agents = generate_agents(self.tasks)
-        self.generate_tasks = generate_tasks
-
+        
         # Initialize data recording
-        self.data_records = []
-        self.result_saver = ResultSaver(config)
+        self.data_records = []        
 
         #self._paused_pressed = False
         self.previous_paused_state = None
