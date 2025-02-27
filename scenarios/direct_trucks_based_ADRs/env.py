@@ -49,12 +49,12 @@ class Env(BaseEnv):
         DEPOT_DIR = os.path.join(ASSETS_DIR,'depot')
 
         background_point_image_path = os.path.join(BACKGROUND_DIR, 'city_view.png')
-        final_image_path = os.path.join(DEPOT_DIR, 'depot_1.png')
+        depot_image_path = os.path.join(DEPOT_DIR, 'depot_1.png')
 
         background_image = pygame.image.load(background_point_image_path).convert_alpha()
         self.background_image = pygame.transform.scale(background_image, (1400, 1400))
-        final_point_image = pygame.image.load(final_image_path).convert_alpha()
-        self.final_point_image = pygame.transform.scale(final_point_image, (80, 80)) #size
+        depot_point_image = pygame.image.load(depot_image_path).convert_alpha()
+        self.depot_point_image = pygame.transform.scale(depot_point_image, (100, 100)) #size
 
     async def step(self):
         await super().step() # Execution of `step()` in `BaseEnv`
@@ -72,7 +72,7 @@ class Env(BaseEnv):
             
     def draw_background(self): # Override
         self.screen.blit(self.background_image, (0, 0))
-        self.screen.blit(self.final_point_image, (670, 460))
+        self.screen.blit(self.depot_point_image, (670, 460))
 
     def draw_tasks_info(self):
         super().draw_tasks_info()
