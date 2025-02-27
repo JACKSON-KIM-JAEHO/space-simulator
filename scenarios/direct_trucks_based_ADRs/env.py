@@ -46,9 +46,10 @@ class Env(BaseEnv):
         ASSETS_DIR = os.path.join(CURRENT_DIR, 'assets')
         BACKGROUND_DIR = os.path.join(ASSETS_DIR, 'background')
         POINT_DIR = os.path.join(ASSETS_DIR, 'point')
+        DEPOT_DIR = os.path.join(ASSETS_DIR,'depot')
 
         background_point_image_path = os.path.join(BACKGROUND_DIR, 'city_view.png')
-        final_image_path = os.path.join(POINT_DIR, 'final_point.png')
+        final_image_path = os.path.join(DEPOT_DIR, 'depot_1.png')
 
         background_image = pygame.image.load(background_point_image_path).convert_alpha()
         self.background_image = pygame.transform.scale(background_image, (1400, 1400))
