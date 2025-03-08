@@ -6,7 +6,7 @@
       <ReactiveSequence>
         <Sequence>
           <Fallback>
-            <IsTruckArrviedAtDropoffLocation/>
+            <IsArrivedAtDropoff/>
             <DeployDrone/>
           </Fallback>
           <ReactiveFallback>
@@ -37,11 +37,11 @@
             editable="true"/>
     <Action ID="GatherLocalInfo"
             editable="true"/>
+    <Condition ID="IsArrivedAtDropoff"
+               editable="true"/>
     <Condition ID="IsArrivedAtTaskLocation"
                editable="true"/>
     <Condition ID="IsArrivedAtTruck"
-               editable="true"/>
-    <Condition ID="IsTruckArrviedAtDropoffLocation"
                editable="true"/>
     <Condition ID="IsTruckAssigned"
                editable="true"/>
