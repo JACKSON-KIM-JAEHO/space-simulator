@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="truck_behavior">
+    <ReactiveSequence>
+      <GatherLocalInfo/>
+      <Sequence>
+        <Fallback>
+          <IsDropoffAssigned/>
+          <CalculateDropoffLocation/>
+        </Fallback>
+        <Sequence>
+          <ReactiveFallback>
+            <IsArrivedAtDropoff/>
+            <MoveToDropoff/>
+          </ReactiveFallback>
+          <ActivateDroneBT/>
+        </Sequence>
+        <ReactiveFallback>
+          <IsDroneBack/>
+          <WaitForDrone/>
+        </ReactiveFallback>
+        <Sequence>
+          <IsNomoredropoff/>
+          <ReactiveFallback>
+            <IsArrivedAtDropoff/>
+            <MoveToDepot/>
+          </ReactiveFallback>
+        </Sequence>
+      </Sequence>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="ActivateDroneBT"
+            editable="true"/>
+    <Action ID="CalculateDropoffLocation"
+            editable="true"/>
+    <Action ID="GatherLocalInfo"
+            editable="true"/>
+    <Condition ID="IsArrivedAtDropoff"
+               editable="true"/>
+    <Condition ID="IsDroneBack"
+               editable="true"/>
+    <Condition ID="IsDropoffAssigned"
+               editable="true"/>
+    <Condition ID="IsNomoredropoff"
+               editable="true"/>
+    <Action ID="MoveToDepot"
+            editable="true"/>
+    <Action ID="MoveToDropoff"
+            editable="true"/>
+    <Action ID="WaitForDrone"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

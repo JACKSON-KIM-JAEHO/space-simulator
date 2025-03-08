@@ -2,7 +2,7 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="delivery">
     <ReactiveSequence>
-      <LocalSensingNode/>
+      <GatherLocalInfo/>
       <ReactiveFallback>
         <ReactiveSequence>
           <DecisionMakingNode/>
@@ -42,7 +42,7 @@
             editable="true"/>
     <Action ID="GatheringNode"
             editable="true"/>
-    <Action ID="LocalSensingNode"
+    <Action ID="GatherLocalInfo"
             editable="true"/>
     <Action ID="RightplacecheckingNode"
             editable="true"/>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+  <BehaviorTree ID="truck_behavior">
+    <ReactiveSequence>
+      <LocalSensingNode/>
+      <ReactiveFallback>
+        <ReactiveSequence>
+          <ReactiveFallback>
+            <IsDropoffAssigned/>
+            <ExploreDropoff/>
+          </ReactiveFallback>
+          <ReactiveSequence>
+            <MoveToDepot/>
+            <IsArrivedAtDepot/>
+            <DeployDrone/>
+          </ReactiveSequence>
+          <Fallback>
+            <IsDroneBack/>
+            <WaitForDrone/>
+          </Fallback>
+        </ReactiveSequence>
+        <ReactiveSequence>
+          <IsRemainingDropoff/>
+          <ReactiveSequence>
+            <MoveToNextDropoff/>
+            <ReactiveSequence>
+              <Fallback>
+                <IsArrivedAtDropoff/>
+                <MoveToDropoff/>
+              </Fallback>
+              <DeployDrone/>
+            </ReactiveSequence>
+          </ReactiveSequence>
+        </ReactiveSequence>
+        <ReactiveSequence>
+          <MoveToDepot/>
+          <Fallback>
+            <IsArrivedAtDropoff/>
+            <DockAtDepot/>
+          </Fallback>
+        </ReactiveSequence>
+      </ReactiveFallback>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="DeployDrone"
+            editable="true"/>
+    <Action ID="DockAtDepot"
+            editable="true"/>
+    <Action ID="ExploreDropoff"
+            editable="true"/>
+    <Condition ID="IsArrivedAtDepot"
+               editable="true"/>
+    <Condition ID="IsArrivedAtDropoff"
+               editable="true"/>
+    <Condition ID="IsDroneBack"
+               editable="true"/>
+    <Condition ID="IsDropoffAssigned"
+               editable="true"/>
+    <Condition ID="IsRemainingDropoff"
+               editable="true"/>
+    <Action ID="LocalSensingNode"
+            editable="true"/>
+    <Action ID="MoveToDepot"
+            editable="true"/>
+    <Action ID="MoveToDropoff"
+            editable="true"/>
+    <Action ID="MoveToNextDropoff"
+            editable="true"/>
+    <Action ID="WaitForDrone"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>
