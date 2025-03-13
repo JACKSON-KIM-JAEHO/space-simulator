@@ -10,7 +10,7 @@
         </Fallback>
         <Sequence>
           <ReactiveFallback>
-            <IsArrivedAtDropoff/>
+            <IsActivated/>
             <MoveToDropoff/>
           </ReactiveFallback>
           <ActivateDroneBT/>
@@ -20,9 +20,12 @@
           <WaitForDrone/>
         </ReactiveFallback>
         <Sequence>
-          <IsNomoredropoff/>
+          <Fallback>
+            <IsNomoredropoff/>
+            <UpdateDropoffLocation/>
+          </Fallback>
           <ReactiveFallback>
-            <IsArrivedAtDropoff/>
+            <IsArrivedAtDepot/>
             <MoveToDepot/>
           </ReactiveFallback>
         </Sequence>
@@ -38,7 +41,9 @@
             editable="true"/>
     <Action ID="GatherLocalInfo"
             editable="true"/>
-    <Condition ID="IsArrivedAtDropoff"
+    <Condition ID="IsActivated"
+               editable="true"/>
+    <Condition ID="IsArrivedAtDepot"
                editable="true"/>
     <Condition ID="IsDroneBack"
                editable="true"/>
@@ -49,6 +54,8 @@
     <Action ID="MoveToDepot"
             editable="true"/>
     <Action ID="MoveToDropoff"
+            editable="true"/>
+    <Action ID="UpdateDropoffLocation"
             editable="true"/>
     <Action ID="WaitForDrone"
             editable="true"/>
