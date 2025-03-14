@@ -5,9 +5,9 @@ from collections import defaultdict
 from itertools import permutations
 
 # make data (random position)
-num_samples = 40  # number of package (customer)
+num_samples = 10  # number of package (customer)
 num_trucks = 1  # number of truck
-max_customers_per_cluster = 10  # Adjust this to test different cases
+max_customers_per_cluster = 2  # Adjust this to test different cases
 
 x_min, x_max = -10, 10
 y_min, y_max = -10, 10
@@ -18,16 +18,18 @@ X = np.column_stack((
 ))
 
 # number of clusters
+'''
+클러스터 개수 정의
+'''
 num_initial_clusters = num_samples // max_customers_per_cluster
 if num_samples % max_customers_per_cluster != 0:
-    num_initial_clusters += 1
+    num_initial_clusters += 1   
 
 # Perform 1st K-means clustering
-max_iter_kmeans = 1000
-initial_kmeans = KMeans(n_clusters=num_initial_clusters, init='k-means++', n_init=10, max_iter=max_iter_kmeans, random_state=None)
+max_iter_kmeans = 100 #k-means 알고리즘의 반복 횟수
+initial_kmeans = KMeans(n_clusters=num_initial_clusters, init='k-means++', n_init='auto', max_iter=max_iter_kmeans, random_state=None)
 initial_labels = initial_kmeans.fit_predict(X)
 
-# Check if each cluster has less than max_customers_per_cluster
 cluster_dict = defaultdict(list)
 for i, label in enumerate(initial_labels):
     cluster_dict[label].append(X[i])
@@ -37,7 +39,7 @@ for cluster_data in cluster_dict.values():
     cluster_data = np.array(cluster_data)
 
     while len(cluster_data) > max_customers_per_cluster:
-        split_kmeans = KMeans(n_clusters=2, init='k-means++', n_init=5, max_iter=max_iter_kmeans, random_state=None)
+        split_kmeans = KMeans(n_clusters=2, init='k-means++', n_init='auto', max_iter=max_iter_kmeans, random_state=None)
         split_labels = split_kmeans.fit_predict(cluster_data)
 
         cluster1 = cluster_data[split_labels == 0]
@@ -106,4 +108,4 @@ plt.legend()
 plt.xlim(x_min, x_max)
 plt.ylim(y_min, y_max)
 plt.grid(True)
-plt.show(block=True)
+plt.show()
